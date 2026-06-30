@@ -1,0 +1,13 @@
+name "Akoo_PRO2009"
+move  Akoo_MAX_v32.ms to $startupScripts
+move   AK*.max  to $max\help 
+move   SampleWater_400.tga  to $max\help 
+move   ShowStencil_*.max  to $max\help 
+move   medit.mat  to $max\help 
+move  akoo2008_*.*  to $max\help 
+move  Akoo_PRO2009_STA.pdf  to $max\help 
+move  Akoo_PRO2009_STA.mcr  to $macroScripts
+move AK_*  to $ui
+move materiallibraries\*.mat to $max\materiallibraries
+run  Akoo_MAX_v32.ms
+drop  Akoo_MAX_v32.ms

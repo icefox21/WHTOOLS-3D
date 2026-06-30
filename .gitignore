@@ -1,0 +1,12 @@
+# 日志文件
+*.log
+
+# 备份目录
+0备份/
+
+# agents配置
+.agents/
+
+# Windows系统文件
+Thumbs.db
+Desktop.ini

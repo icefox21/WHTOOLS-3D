@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MaxHotkeyTransformations Locked="false">
+    <Assign_Hotkey Shortcut="Ctrl+I" Id="951718758-40022"/>
+    <Assign_Hotkey Shortcut="Space" Id="2077580866-40020"/>
+    <Assign_Hotkey Shortcut="N" Id="48759-4967"/>
+    <Assign_Hotkey Shortcut="D" Id="0-40020"/>
+    <Assign_Hotkey Shortcut="I" Id="0-40010"/>
+    <Assign_Hotkey Shortcut="Ctrl+P" Id="0-322"/>
+    <Assign_Hotkey Shortcut="U" Id="0-40195"/>
+    <Assign_Hotkey Shortcut="Ins" Id="0-226"/>
+    <Assign_Hotkey Shortcut="Alt+;" Id="0-40143"/>
+    <Assign_Hotkey Shortcut="Alt+O" Id="0-40142"/>
+    <Assign_Hotkey Shortcut="Alt+F" Id="0-224"/>
+    <Assign_Hotkey Shortcut="Alt+1" Id="0-40210"/>
+    <Assign_Hotkey Shortcut="Alt+C" Id="0-40109"/>
+    <Assign_Hotkey Shortcut="X" Id="0-50048"/>
+    <Assign_Hotkey Shortcut="Alt+Z" Id="0-223"/>
+    <Assign_Hotkey Shortcut="V" Id="0-408"/>
+    <Assign_Hotkey Shortcut="Ctrl+H" Id="0-50029"/>
+    <Assign_Hotkey Shortcut="Shift+F3" Id="3450739058-1"/>
+    <Assign_Hotkey Shortcut="E" Id="647394-Rectangle`Objects Shapes"/>
+    <Assign_Hotkey Shortcut="W" Id="647394-Lines`Objects Shapes"/>
+    <Assign_Hotkey Shortcut="F11" Id="647394-Uvwmap`Modifiers"/>
+    <Assign_Hotkey Shortcut="A" Id="647394-HFI_UnHideall`阿酷"/>
+    <Assign_Hotkey Shortcut="Q" Id="647394-subLevel_Exit`阿酷"/>
+    <Assign_Hotkey Shortcut="2" Id="647394-subLevel_2`阿酷"/>
+    <Assign_Hotkey Shortcut="3" Id="647394-subLevel_3`阿酷"/>
+    <Assign_Hotkey Shortcut="4" Id="647394-subLevel_4`阿酷"/>
+    <Assign_Hotkey Shortcut="5" Id="647394-subLevel_5`阿酷"/>
+    <Assign_Hotkey Shortcut="T" Id="647394-view_top`阿酷"/>
+    <Assign_Hotkey Shortcut="F" Id="647394-view_FBA`阿酷"/>
+    <Assign_Hotkey Shortcut="K" Id="647394-view_FBB`阿酷"/>
+    <Assign_Hotkey Shortcut="R" Id="647394-view_LRB`阿酷"/>
+    <Assign_Hotkey Shortcut="L" Id="647394-view_LRA`阿酷"/>
+    <Assign_Hotkey Shortcut="Shift+E" Id="647394-spline_Weld`阿酷"/>
+    <Assign_Hotkey Shortcut="Shift+R" Id="647394-spline_Trim`阿酷"/>
+    <Assign_Hotkey Shortcut="Shift+2" Id="647394-Spline_Connect`阿酷"/>
+    <Assign_Hotkey Shortcut="Shift+A" Id="647394-spline_Attach`阿酷"/>
+    <Assign_Hotkey Shortcut="Ctrl+W" Id="647394-Modif_EditMesh`阿酷"/>
+    <Assign_Hotkey Shortcut="Ctrl+Q" Id="647394-C_Sub_2`AA_Com"/>
+    <Assign_Hotkey Shortcut="F9" Id="647394-Modif_uvwmap`阿酷"/>
+    <Assign_Hotkey Shortcut="Shift+T" Id="647394-spline_Refine`阿酷"/>
+    <Assign_Hotkey Shortcut="Alt+X" Id="647394-hotbox`RDF3"/>
+    <Assign_Hotkey Shortcut="Alt+[" Id="647394-mdl_extpl`RDF3"/>
+    <Assign_Hotkey Shortcut="1" Id="647394-C_Sub_1`AA_Com"/>
+    <Assign_Hotkey Shortcut="Alt+D" Id="647394-dsp_wirblck`RDF3"/>
+    <Assign_Hotkey Shortcut="`" Id="647394-AssignMaterial`$材质"/>
+    <Assign_Hotkey Shortcut="Shift+D" Id="647394-ESpline_Fillet`Editable Spline Object"/>
+    <Assign_Hotkey Shortcut="Shift+W" Id="647394-shp_cmb`RDF3"/>
+    <Assign_Hotkey Shortcut="Ctrl+X" Id="647394-matbox`RDF3"/>
+    <Assign_Hotkey Shortcut="G" Id="647394-Convert_to_Poly`Modifier Stack"/>
+    <Assign_Hotkey Shortcut="Y" Id="647394-shp_cn`RDF3"/>
+    <Assign_Hotkey Shortcut="Alt+G" Id="647394-Group_g`阿酷"/>
+    <Assign_Hotkey Shortcut="H" Id="647394-trns_pvtcnt`RDF3"/>
+    <Assign_Hotkey Shortcut="Ctrl+C" Id="647394-actbox`RDF3"/>
+    <Assign_Hotkey Shortcut="Alt+3" Id="647394-HideUnSelected`Ribbon - Modeling"/>
+    <Assign_Hotkey Shortcut="Ctrl+1" Id="647394-cam_record`RDF3"/>
+    <Assign_Hotkey Shortcut="Ctrl+2" Id="647394-cam_restore`RDF3"/>
+    <Unassign_Hotkey Shortcut="Alt+R" Id="2077580866-45348"/>
+    <Unassign_Hotkey Shortcut="Ctrl+L" Id="2077580866-40020"/>
+    <Unassign_Hotkey Shortcut="Shift+V" Id="0-40033"/>
+    <Unassign_Hotkey Shortcut="A" Id="0-40074"/>
+    <Unassign_Hotkey Shortcut="D" Id="0-40126"/>
+    <Unassign_Hotkey Shortcut="E" Id="0-50002"/>
+    <Unassign_Hotkey Shortcut="F" Id="0-40060"/>
+    <Unassign_Hotkey Shortcut="H" Id="0-50029"/>
+    <Unassign_Hotkey Shortcut="I" Id="0-322"/>
+    <Unassign_Hotkey Shortcut="K" Id="0-40800"/>
+    <Unassign_Hotkey Shortcut="L" Id="0-40061"/>
+    <Unassign_Hotkey Shortcut="N" Id="0-50024"/>
+    <Unassign_Hotkey Shortcut="Ctrl+P" Id="0-40202"/>
+    <Unassign_Hotkey Shortcut="T" Id="0-40059"/>
+    <Unassign_Hotkey Shortcut="U" Id="0-40183"/>
+    <Unassign_Hotkey Shortcut="W" Id="0-50001"/>
+    <Unassign_Hotkey Shortcut="Ctrl+W" Id="0-50014"/>
+    <Unassign_Hotkey Shortcut="Ctrl+H" Id="0-40087"/>
+    <Unassign_Hotkey Shortcut="F11" Id="0-40472"/>
+    <Unassign_Hotkey Shortcut="G" Id="0-40077"/>
+    <Unassign_Hotkey Shortcut="Alt+X" Id="0-373"/>
+    <Unassign_Hotkey Shortcut="Ctrl+X" Id="0-40264"/>
+    <Unassign_Hotkey Shortcut="Alt+Z" Id="0-50013"/>
+    <Unassign_Hotkey Shortcut="`" Id="0-40130"/>
+    <Unassign_Hotkey Shortcut="Shift+A" Id="0-49"/>
+    <Unassign_Hotkey Shortcut="Alt+D" Id="0-40904"/>
+    <Unassign_Hotkey Shortcut="Ctrl+Q" Id="0-40099"/>
+    <Unassign_Hotkey Shortcut="F9" Id="0-50030"/>
+    <Unassign_Hotkey Shortcut="Alt+J" Id="0-470"/>
+    <Unassign_Hotkey Shortcut="Shift+F3" Id="3450739058-12"/>
+    <Unassign_Hotkey Shortcut="Y" Id="647394-SmartPlace`Tools"/>
+    <Unassign_Hotkey Shortcut="Ins" Id="647394-PivotMode_Toggle`Tools"/>
+    <Unassign_Hotkey Shortcut="Alt+E" Id="647394-EPoly_Extrude_Along_Spline`Editable Polygon Object"/>
+    <Unassign_Hotkey Shortcut="Alt+C" Id="647394-EPoly_Cut`Editable Polygon Object"/>
+    <Unassign_Hotkey Shortcut="1" Id="647394-SubObject_1`Modifier Stack"/>
+    <Unassign_Hotkey Shortcut="2" Id="647394-SubObject_2`Modifier Stack"/>
+    <Unassign_Hotkey Shortcut="3" Id="647394-SubObject_3`Modifier Stack"/>
+    <Unassign_Hotkey Shortcut="4" Id="647394-SubObject_4`Modifier Stack"/>
+    <Unassign_Hotkey Shortcut="R" Id="647394-SmartScale`Tools"/>
+    <Unassign_Hotkey Shortcut="5" Id="647394-SubObject_5`Modifier Stack"/>
+    <Unassign_Hotkey Shortcut="0" Id="647394-BakeDialog`Render"/>
+    <Unassign_Hotkey Shortcut="Ctrl+C" Id="647394-PhysicalCamera_CreateFromView`Lights and Cameras"/>
+    <Unassign_Hotkey Shortcut="Alt+1" Id="647394-Custom_Attributes`Customize User Interface"/>
+    <Unassign_Hotkey Shortcut="Ctrl+1" Id="647394-TVCustom_Attributes`Track View"/>
+    <Unassign_Hotkey Shortcut="Alt+3" Id="647394-ParamCollectorSchematicView`Parameter Collector"/>
+    <Unassign_Hotkey Shortcut="Alt+G" Id="647394-ProjectioModToggleNodeVisibility`Projection Modifier"/>
+    <Unassign_Hotkey Shortcut="Q" Id="647394-SmartSelect`Selection"/>
+    <Unassign_Hotkey Shortcut="Shift+T" Id="647394-AssetTrackingSystemToggle`Asset Tracking System"/>
+    <Unassign_Hotkey Shortcut="Shift+E" Id="647394-EPoly_FExtrude`Editable Polygon Object"/>
+    <Unassign_Hotkey Shortcut="V" Id="1261319018-Viewports"/>
+    <Unassign_Hotkey Shortcut="Ctrl+Shift+N" Description="选择锁定切换" Id="0-59231"/>
+    <Unassign_Hotkey Shortcut="Space" Description="锁定" Id="1261319018-30882"/>
+    <Assign_Hotkey Shortcut="Space" Description="选择锁定切换" Id="0-59231"/>
+    <Assign_Hotkey Shortcut="Ctrl+G" Description="显示所有栅格切换" Id="0-340"/>
+    <Unassign_Hotkey Shortcut="G" Description="显示栅格" Id="5-6060"/>
+    <Unassign_Hotkey Shortcut="G" Description="显示栅格" Id="369891408-40061"/>
+    <Unassign_Hotkey Shortcut="G" Description="栅格可见" Id="2077580866-40133"/>
+</MaxHotkeyTransformations>

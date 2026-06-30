@@ -1,0 +1,423 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ADSK_CLR>
+    <IconImageScales>
+        <appFrameColorTheme value="0" />
+        <enabledSatScale value="100.000000" />
+        <enabledValueScale value="100.000000" />
+        <enabledAlphaScale value="100.000000" />
+        <enabledContrastScale value="0.000000" />
+        <enabledGradientMapScale value="0.000000" />
+        <disabledSatScale value="0.000000" />
+        <disabledValueScale value="80.000000" />
+        <disabledAlphaScale value="100.000000" />
+        <disabledContrastScale value="0.000000" />
+        <disabledGradientMapScale value="0.000000" />
+        <enabledInvertImage value="0" />
+        <disabledInvertImage value="0" />
+    </IconImageScales>
+    <CustomColors>
+        <category name="外观">
+            <color id="1" value="#ffffff" disabled="#8f8f8f" name="文本" />
+            <color id="4" value="#5f8ac1" name="活动命令" />
+            <color id="5" value="#383838" name="3D 高光" />
+            <color id="6" value="#0b0b0b" name="3D 阴影" />
+            <color id="8" value="#222f38" name="活动标题" />
+            <color id="9" value="#ffb100" name="工具提示(视口)背景" />
+            <color id="10" value="#000000" name="工具提示(视口)文本" />
+            <color id="11" value="#b2b2b2" name="高亮显示文本" />
+            <color id="13" value="#1e6edc" name="项目高亮显示" />
+            <color id="14" value="#5f8ac1" name="修改器子对象选择" />
+            <color id="15" value="#0b0b0b" name="3D 黑色阴影" />
+            <color id="16" value="#333333" name="3D 灯光" />
+            <color id="17" value="#aaaaaa" name="App 工作区" />
+            <color id="25" value="#5f8ac1" disabled="#4f6076" hover="#496a93" name="按下的按钮" />
+            <color id="26" value="#444444" name="时间滑块背景" />
+            <color id="33" value="#000000" name="选择橡皮筋" />
+            <color id="34" value="#5f8ac1" name="修改器选择" />
+            <color id="38" value="#5f8ac1" name="按下的层次按钮" />
+            <color id="93" value="#33ffff" name="自适应降级处于活动状态" />
+            <color id="111" value="#444444" name="背景奇数" />
+            <color id="112" value="#515151" name="背景偶数" />
+            <color id="113" value="#646464" disabled="#595959" hover="#383838" name="Button" />
+            <color id="114" value="#dcdcdc" disabled="#8f8f8f" hover="#ffffff" name="按钮文本" />
+            <color id="115" value="#dcdcdc" disabled="#8f8f8f" hover="#ffffff" name="按下按钮文本" />
+            <color id="116" value="#d0d0d0" name="焦点边界" />
+            <color id="117" value="#383838" name="UI 边界" />
+            <color id="118" value="#8f2f2f" name="动画关键点边框" />
+            <color id="127" value="#848484" name="工具提示(UI)背景" />
+            <color id="128" value="#eeeeee" hover="#eeeeee" name="工具提示(UI)文本" />
+            <color id="129" value="#5a5a5a" name="行背景" />
+            <color id="130" value="#4f4f4f" name="行替换背景" />
+            <color id="131" value="#333333" name="渲染消息背景" />
+            <color id="132" value="#cccccc" name="渲染消息文本" />
+            <color id="133" value="#9bd5ef" name="渲染消息系统" />
+            <color id="134" value="#faa21b" name="渲染消息警告" />
+            <color id="135" value="#ec4841" name="渲染消息错误" />
+            <color id="136" value="#ffcb78" name="搜索文本高亮显示" />
+            <color id="17332" value="#ff0000" name="自动关键点按钮" />
+            <color id="17408" value="#4c4c4c" name="未选定标签" />
+            <color id="17424" value="#3a843e" name="设置关键点模式" />
+        </category>
+        <category name="轨迹栏">
+            <color id="18" value="#2a2a2a" name="轨迹栏背景" />
+            <color id="19" value="#354657" name="轨迹栏选定背景" />
+            <color id="20" value="#bcbcbc" name="轨迹栏文本" />
+            <color id="21" value="#646464" name="轨迹栏 Tick" />
+            <color id="22" value="#000000" name="关键点: 未知" />
+            <color id="23" value="#ffffff" name="关键点: 选定" />
+            <color id="24" value="#fdea12" name="轨迹栏光标" />
+            <color id="79" value="#a30000" name="关键点: 位置" />
+            <color id="80" value="#007a00" name="关键点: 旋转" />
+            <color id="81" value="#0000c9" name="关键点: 缩放" />
+            <color id="82" value="#000000" name="关键点: 变换" />
+            <color id="83" value="#000000" name="关键点: 对象" />
+            <color id="84" value="#000000" name="关键点: 材质" />
+            <color id="85" value="#000000" name="关键点: 混合" />
+            <color id="107" value="#00ff00" name="轨迹栏缓存的线" />
+            <color id="108" value="#ffff00" name="轨迹栏缓存线" />
+        </category>
+        <category name="视口">
+            <color id="27" value="#323232" name="视口边框" />
+            <color id="28" value="#7c6a2c" name="视口活动边框" />
+            <color id="64" value="#f5009c" name="显示从属关系" />
+            <color id="105" value="#1a1a1a" name="视口渐变背景顶部" />
+            <color id="106" value="#4d4d4d" name="视口渐变背景底部" />
+            <color id="109" value="#ffff00" name="预览高光" />
+            <color id="110" value="#00b2ff" name="选择高光" />
+            <color id="17325" value="#c0c000" name="安全框活动" />
+            <color id="17326" value="#00d7d7" name="安全框动作" />
+            <color id="17327" value="#c89600" name="安全框标题" />
+            <color id="17328" value="#c8c8c8" name="视口标签" />
+            <color id="17329" value="#3c3c3c" name="非活动视口标签" />
+            <color id="17330" value="#eecc55" name="弧形球" />
+            <color id="17331" value="#c0c0c0" name="弧形球高光" />
+            <color id="17361" value="#383838" name="视口背景" />
+            <color id="17367" value="#cc7fcc" name="12 区栅格" />
+            <color id="17384" value="#ff00ff" name="安全框用户" />
+            <color id="17392" value="#eecc55" name="视口剪切" />
+            <color id="17395" value="#e100e1" name="十字线光标" />
+            <color id="17443" value="#e0e0e0" name="统计数据" />
+            <color id="17446" value="#808080" name="未选择的隐藏线" />
+            <color id="17447" value="#e5cc19" name="视口标签高光" />
+        </category>
+        <category name="ActiveShade">
+            <color id="35" value="#464646" name="ImageViewer 背景" />
+            <color id="36" value="#ce0202" name="ActiveShade 进度(水平)" />
+            <color id="37" value="#15a402" name="ActiveShade 进度(垂直)" />
+        </category>
+        <category name="轨迹视图">
+            <color id="39" value="#3f3f3f" name="轨迹视图背景" />
+            <color id="40" value="#383838" name="轨迹视图非活动背景" />
+            <color id="44" value="#b63434" name="功能曲线: X" />
+            <color id="45" value="#319431" name="功能曲线: Y" />
+            <color id="46" value="#4157ff" name="功能曲线: Z" />
+            <color id="47" value="#c8c800" name="功能曲线: W" />
+            <color id="48" value="#32c6c8" name="功能曲线: 浮点" />
+            <color id="49" value="#ffffff" name="功能曲线: 选定" />
+            <color id="50" value="#dcdcdc" name="轨迹文本" />
+            <color id="51" value="#8f8e79" name="时间: 选定实例" />
+            <color id="52" value="#ffff00" name="关键点: 光标" />
+            <color id="53" value="#535353" name="选定轨迹背景" />
+            <color id="54" value="#434343" name="轨迹栏: 已禁用" />
+            <color id="55" value="#464646" name="轨迹栏终点: 已禁用" />
+            <color id="56" value="#171717" name="轨迹栏: 已启用" />
+            <color id="57" value="#8f8f8f" name="轨迹栏终点: 已启用" />
+            <color id="58" value="#cab423" name="时间: 滑线" />
+            <color id="59" value="#343434" name="时间: 栅格" />
+            <color id="60" value="#808080" name="关键点: 未知" />
+            <color id="61" value="#fffefa" name="关键点: 选定" />
+            <color id="62" value="#2a2a2a" name="关键点: 轮廓" />
+            <color id="63" value="#afafaf" name="关键点: 顶部轮廓" />
+            <color id="65" value="#009577" name="声音轨迹: 右通道" />
+            <color id="66" value="#9c2541" name="声音轨迹: 左通道" />
+            <color id="68" value="#810000" name="关键点: 位置" />
+            <color id="69" value="#007a00" name="关键点: 旋转" />
+            <color id="70" value="#3737bc" name="关键点: 缩放" />
+            <color id="71" value="#808080" name="关键点: 变换" />
+            <color id="72" value="#808080" name="关键点: 对象" />
+            <color id="73" value="#808080" name="关键点: 材质" />
+            <color id="74" value="#000000" name="切线控制柄: 可调整" />
+            <color id="75" value="#6f6fff" name="切线控制柄: 自动" />
+            <color id="76" value="#595959" name="关键点: 混合" />
+            <color id="77" value="#c3c3c3" name="关键点: 虚设" />
+            <color id="86" value="#b66732" name="缩放值原点" />
+            <color id="87" value="#ffffff" name="关键点: 选定的功能曲线" />
+            <color id="88" value="#797979" name="关键点: 未选择的功能曲线" />
+            <color id="91" value="#a09fb7" name="缩放值原点" />
+            <color id="92" value="#d3d2e7" name="缩放值原点" />
+            <color id="94" value="#d0d0d0" name="控制器窗口切换" />
+            <color id="95" value="#0a0a0a" name="区域选择: 边界" />
+            <color id="96" value="#fafafa" name="区域选择: 夹点" />
+            <color id="97" value="#c8c8c8" name="区域选择: 区域" />
+            <color id="98" value="#969696" name="区域选择: 外部区域" />
+            <color id="99" value="#ebeb00" name="重定时工具: 标记" />
+            <color id="100" value="#d7d700" name="重定时工具: 标记控制柄" />
+            <color id="101" value="#fafa87" name="重定时工具: 将鼠标置于标记/控制柄上" />
+            <color id="102" value="#adaaa5" name="重定时工具: 选定的标记/控制柄" />
+            <color id="103" value="#ffffff" name="重定时工具: 将鼠标置于选定的标记/控制柄上" />
+        </category>
+        <category name="操纵器">
+            <color id="41" value="#00e100" name="活动操纵器" />
+            <color id="42" value="#ff0000" name="选定操纵器" />
+            <color id="43" value="#ffe100" name="非活动操纵器" />
+        </category>
+        <category name="对象">
+            <color id="67" value="#ff0000" name="集合对象" />
+            <color id="17338" value="#a868aa" name="空间扭曲" />
+            <color id="17339" value="#0eff02" name="虚拟对象" />
+            <color id="17340" value="#0eff02" name="点对象" />
+            <color id="17341" value="#d5d5d5" name="点轴" />
+            <color id="17342" value="#0eff02" name="卷尺对象" />
+            <color id="17343" value="#aebacb" name="骨骼" />
+            <color id="17350" value="#5778cc" name="摄影机对象" />
+            <color id="17355" value="#ffe500" name="灯光对象" />
+            <color id="17387" value="#ff7fb2" name="组对象" />
+        </category>
+        <category name="材质编辑器">
+            <color id="89" value="#0000ff" name="越界: 低" />
+            <color id="90" value="#ff0000" name="越界: 高" />
+        </category>
+        <category name="Gizmos">
+            <color id="119" value="#6f6fff" name="运动路径控制柄: 自动" />
+            <color id="120" value="#ffff00" name="运动路径控制柄: 可调整" />
+            <color id="121" value="#00ff00" name="运动路径内控制柄结束" />
+            <color id="122" value="#6f6fff" name="运动路径外控制柄结束" />
+            <color id="123" value="#0033ff" name="运动路径速度低" />
+            <color id="124" value="#ff0000" name="运动路径速度高" />
+            <color id="125" value="#ffff00" name="运动路径渐变开始" />
+            <color id="126" value="#ff0000" name="运动路径渐变结束" />
+            <color id="17334" value="#eaff6d" name="链接线" />
+            <color id="17335" value="#fa0000" name="运动路径" />
+            <color id="17336" value="#c82323" name="活动轴" />
+            <color id="17337" value="#666666" name="非活动轴" />
+            <color id="17344" value="#fd9500" name="Gizmos" />
+            <color id="17345" value="#c8c846" name="选定 Gizmo" />
+            <color id="17349" value="#e98400" name="粒子发射器" />
+            <color id="17351" value="#99cce5" name="摄影机圆锥体" />
+            <color id="17352" value="#000000" name="摄影机地平线" />
+            <color id="17353" value="#e5cc99" name="摄影机近距范围" />
+            <color id="17354" value="#72664c" name="摄影机远距范围" />
+            <color id="17356" value="#4cb4fc" name="目标线" />
+            <color id="17357" value="#cfba2f" name="灯光聚光区" />
+            <color id="17358" value="#867b2f" name="灯光衰减区" />
+            <color id="17359" value="#1d4663" name="灯光远距范围起点" />
+            <color id="17360" value="#406680" name="灯光远距范围终点" />
+            <color id="17362" value="#ffffff" name="运动路径标记" />
+            <color id="17363" value="#ff0000" name="运动路径未使用的颜色" />
+            <color id="17364" value="#cccccc" name="运动路径关键点时间" />
+            <color id="17368" value="#3c5f95" name="灯光近距范围起点" />
+            <color id="17369" value="#4383e2" name="灯光近距范围终点" />
+            <color id="17370" value="#e53333" name="摄影机剪切" />
+            <color id="17379" value="#f61bd5" name="末端效应器" />
+            <color id="17380" value="#6396e0" name="末端效应器字符串" />
+            <color id="17381" value="#f9960a" name="选定关节限制" />
+            <color id="17382" value="#d87f00" name="关节限制" />
+            <color id="17383" value="#ff4c4c" name="终结点" />
+            <color id="17388" value="#c80000" name="变换 Gizmo X" />
+            <color id="17389" value="#009c00" name="变换 Gizmo Y" />
+            <color id="17390" value="#0000c3" name="变换 Gizmo Z" />
+            <color id="17391" value="#ffff00" name="活动变换 Gizmo" />
+            <color id="17393" value="#00a38e" name="灯光衰退开始" />
+            <color id="17409" value="#00adbc" name="大气设备" />
+            <color id="17427" value="#636363" name="旋转 Gizmo 轮廓" />
+            <color id="17428" value="#aaaaaa" name="屏幕空间 Gizmo" />
+            <color id="17429" value="#595959" name="移动 Gizmo 轨迹" />
+        </category>
+        <category name="几何体">
+            <color id="17320" value="#ffffff" name="选择" />
+            <color id="17321" value="#d00000" name="子选择" />
+            <color id="17322" value="#787878" name="冻结" />
+            <color id="17346" value="#efcc0a" name="样条线向量" />
+            <color id="17347" value="#00e40b" name="样条线控制柄" />
+            <color id="17365" value="#26777f" name="重影(之前)" />
+            <color id="17366" value="#777f26" name="重影(之后)" />
+            <color id="17371" value="#00ff00" name="NURBS 控制顶点" />
+            <color id="17372" value="#ffff00" name="NURBS 晶格" />
+            <color id="17373" value="#00ff00" name="NURBS 限定点" />
+            <color id="17374" value="#00ff00" name="NURBS 拟合点" />
+            <color id="17375" value="#00ff00" name="NURBS 从属对象" />
+            <color id="17376" value="#ffb200" name="NURBS 错误对象" />
+            <color id="17377" value="#0000ff" name="NURBS 高光" />
+            <color id="17378" value="#cc33ff" name="NURBS 熔合" />
+            <color id="17385" value="#5454f0" name="顶点标记" />
+            <color id="17386" value="#666666" name="透明" />
+            <color id="17394" value="#ff0000" name="顶点数" />
+            <color id="17410" value="#ff6600" name="硬子选择" />
+            <color id="17411" value="#fff600" name="中子选择" />
+            <color id="17412" value="#0000ff" name="软子选择" />
+            <color id="17425" value="#cccccc" name="背面线" />
+            <color id="17426" value="#000066" name="背面顶点标记" />
+            <color id="17430" value="#0000cc" name="法线 - 未指定" />
+            <color id="17431" value="#00cccc" name="法线 - 已指定" />
+            <color id="17432" value="#00cc00" name="法线 - 显性" />
+            <color id="17444" value="#ffffff" name="未选择的样条线结" />
+            <color id="17445" value="#fcff00" name="首先样条线结" />
+            <color id="503128211" value="#f2d900" name="HSDS 控制边" />
+            <color id="981893113" value="#ffffff" name="HSDS 控制网格" />
+        </category>
+        <category name="无类别">
+            <color id="17323" value="#000000" name="栅格" />
+            <color id="17324" value="#696969" name="GridIntensity" />
+            <color id="17333" value="#ffffff" name="选择控制柄" />
+        </category>
+        <category name="图解视图">
+            <color id="17396" value="#3f3f3f" name="SV 窗口 Bkg" />
+            <color id="17397" value="#7f7f7f" name="SV 节点 Bkg" />
+            <color id="17398" value="#ffffff" name="SV 选定节点 Bkg" />
+            <color id="17399" value="#ffffff" name="SV 节点高光" />
+            <color id="17400" value="#ffffff" name="SV 材质高光" />
+            <color id="17401" value="#ffffff" name="SV 修改器高光" />
+            <color id="17402" value="#ff0000" name="SV 插件高光" />
+            <color id="17403" value="#ff0000" name="SV 子动画线" />
+            <color id="17404" value="#007f00" name="SV 子线" />
+            <color id="17405" value="#000000" name="SV 帧" />
+            <color id="17406" value="#000000" name="SV 选定标签" />
+            <color id="17407" value="#000000" name="SV 标签" />
+            <color id="17413" value="#616161" name="SV 展开子对象按钮" />
+            <color id="17414" value="#7f7fff" name="SV 几何体节点 Bkg" />
+            <color id="17415" value="#ffe500" name="SV 灯光节点 Bkg" />
+            <color id="17416" value="#5778cc" name="SV 摄影机节点 Bkg" />
+            <color id="17417" value="#00ffff" name="SV 图形节点 Bkg" />
+            <color id="17418" value="#48ff3f" name="SV 辅助对象节点 Bkg" />
+            <color id="17419" value="#bfff7f" name="SV 系统节点 Bkg" />
+            <color id="17420" value="#ff7f7f" name="SV 控制器节点 Bkg" />
+            <color id="17421" value="#e8c53a" name="SV 修改器节点 Bkg" />
+            <color id="17422" value="#ad9e70" name="SV 材质节点 Bkg" />
+            <color id="17423" value="#5db359" name="SV 贴图节点 Bkg" />
+            <color id="17433" value="#343434" name="SV 栅格颜色" />
+            <color id="17434" value="#7f7fff" name="SV Rel 实例" />
+            <color id="17435" value="#ff7f7f" name="SV Rel 限制" />
+            <color id="17436" value="#ff00ff" name="SV Rel 参数连线" />
+            <color id="17437" value="#48ff3f" name="SV Rel 灯光" />
+            <color id="17438" value="#e8c53a" name="SV Rel 修改器" />
+            <color id="17439" value="#ff7f7f" name="SV Rel 控制器" />
+            <color id="17440" value="#00ff00" name="SV Rel 其他" />
+            <color id="17441" value="#7c1d7f" name="SV 空间扭曲 Bkg" />
+            <color id="17442" value="#ecde68" name="SV 基础对象 Bkg" />
+        </category>
+        <category name="捕捉">
+            <color id="17448" value="#aaaaaa" name="捕捉轴中心控制柄" />
+            <color id="17449" value="#ffff00" name="捕捉点为活动" />
+            <color id="17450" value="#00ff00" name="捕捉点被捕捉" />
+        </category>
+        <category name="SME">
+            <color id="420000" value="#373737" name="背景" />
+            <color id="420001" value="#424242" name="背景栅格" />
+            <color id="420002" value="#535353" name="节点实体" />
+            <color id="420004" value="#e5e5e5" name="节点文本" />
+            <color id="420005" value="#ffffff" name="节点文本高亮显示" />
+            <color id="420006" value="#373737" name="节点轮廓" />
+            <color id="420007" value="#ffffff" name="已选择节点轮廓" />
+            <color id="420008" value="#e5e5e5" name="节点打开/关闭按钮" />
+            <color id="420009" value="#e5e5e5" name="节点打开/关闭按钮高光" />
+            <color id="420010" value="#e5e5e5" name="节点编辑指示器" />
+            <color id="420011" value="#e5e5e5" name="已选择节点编辑指示器" />
+            <color id="420012" value="#434343" name="文本控件编辑背景" />
+            <color id="420013" value="#496a93" name="节点槽高光" />
+            <color id="420014" value="#3f67ab" name="节点标头材质" />
+            <color id="420015" value="#3f67ab" name="已选择节点标头材质" />
+            <color id="420016" value="#0d8e55" name="节点标头纹理贴图" />
+            <color id="420017" value="#0d8e55" name="已选择节点标头纹理贴图" />
+            <color id="420018" value="#bb6f26" name="节点标头控制器" />
+            <color id="420019" value="#bb6f26" name="已选择节点标头控制器" />
+            <color id="420020" value="#5e40a2" name="节点标头复合" />
+            <color id="420021" value="#5e40a2" name="已选择节点标头复合" />
+            <color id="420022" value="#6487ce" name="材质类型的连线" />
+            <color id="420023" value="#689ed4" name="具有隐藏输出选择器的材质类型的连线" />
+            <color id="420024" value="#35a673" name="纹理贴图类型的连线" />
+            <color id="420025" value="#3bc96a" name="具有隐藏输出选择器的纹理贴图类型的连线" />
+            <color id="420026" value="#b2b2b5" name="连线常规" />
+            <color id="420027" value="#c85252" name="连线无效" />
+        </category>
+        <category name="OSL 编辑器">
+            <color id="520000" value="#646464" name="代码背景" />
+            <color id="520001" value="#ffffff" name="代码前景" />
+            <color id="520002" value="#afafff" name="关键字" />
+            <color id="520003" value="#20ffff" name="全局" />
+            <color id="520010" value="#ffff00" name="字符串" />
+            <color id="520011" value="#64ff64" name="注释" />
+            <color id="520012" value="#c0c0c0" name="元数据" />
+            <color id="520020" value="#555555" name="行号背景" />
+            <color id="520021" value="#999999" name="行号前景" />
+            <color id="520022" value="#404040" name="边框高光背景" />
+            <color id="520023" value="#ff80ff" name="边框高光前景" />
+            <color id="520024" value="#c80000" name="错误背景" />
+            <color id="520025" value="#ffff00" name="错误前景" />
+            <color id="520026" value="#50505a" name="字词高光背景" />
+            <color id="520027" value="#ffffff" name="字词高光前景" />
+        </category>
+        <category name="场景资源管理器">
+            <color id="657632" value="#ffffff" name="层高光前景" />
+            <color id="657633" value="#3b5797" name="层高光背景" />
+        </category>
+        <category name="HSDS 控制">
+            <color id="6261441" value="#5f8ac1" name="显示的级别项" />
+            <color id="6579300" value="#646464" name="隐藏的级别项" />
+            <color id="1244031133" value="#787878" name="级别项分隔符" />
+            <color id="1637973995" value="#ff0000" name="当前级别项" />
+            <color id="1724273072" value="#00fafa" name="显示的级别项" />
+            <color id="2084852526" value="#b4b4b4" name="隐藏的级别项" />
+        </category>
+        <category name="粒子流">
+            <color id="55791844" value="#ff0000" name="子选择" />
+            <color id="199427397" value="#fde537" name="测试 Gizmo" />
+            <color id="324632263" value="#f3b461" name="源 Gizmo" />
+            <color id="541346229" value="#447395" name="操作符 Gizmo" />
+        </category>
+        <category name="角色">
+            <color id="140135570" value="#054000" name="线框颜色" />
+        </category>
+        <category name="节点视图">
+            <color id="588931057" value="#3c3c3c" name="节点视图背景" />
+            <color id="1414099189" value="#414141" name="节点视图栅格" />
+        </category>
+        <category name="展开颜色">
+            <color id="914622688" value="#ffffff" name="线条颜色" />
+            <color id="914622689" value="#ff0000" name="选择颜色" />
+            <color id="914622690" value="#00ff00" name="开放边颜色" />
+            <color id="914622691" value="#ffff00" name="控制柄颜色" />
+            <color id="914622692" value="#ff6432" name="变换 Gizmo 颜色" />
+            <color id="914622693" value="#0000ff" name="共享子对象颜色" />
+            <color id="914622694" value="#787878" name="背景颜色" />
+            <color id="914622695" value="#969696" name="栅格颜色" />
+            <color id="914622696" value="#e60000" name="几何体边颜色" />
+            <color id="914622697" value="#e60000" name="几何体顶点颜色" />
+            <color id="914622704" value="#0db2ff" name="毛皮接缝颜色" />
+            <color id="914622705" value="#00ff00" name="边扭曲颜色" />
+            <color id="914622706" value="#ff0000" name="边扭曲目标颜色" />
+            <color id="914622707" value="#808080" name="棋盘格颜色 1" />
+            <color id="914622708" value="#ffffff" name="棋盘格颜色 2" />
+        </category>
+        <category name="UVW 贴图">
+            <color id="914627058" value="#00ff00" name="贴图接缝颜色" />
+        </category>
+        <category name="3D Painter">
+            <color id="1146357984" value="#2bffff" name="镜像重投影" />
+            <color id="1146357985" value="#2bffff" name="法线颜色" />
+            <color id="1146357986" value="#ff0000" name="圆环按下颜色" />
+            <color id="1146357987" value="#ff0000" name="压缩法线的颜色" />
+            <color id="1146357988" value="#ff0000" name="轨迹颜色" />
+            <color id="1146357989" value="#fc9200" name="Gizmo 颜色" />
+        </category>
+        <category name="蒙皮颜色">
+            <color id="1183058175" value="#808080" name="无权重颜色" />
+        </category>
+        <category name="顶点绘制">
+            <color id="1466918928" value="#ff0000" name="选定顶点颜色" />
+            <color id="1466918929" value="#ff0000" name="选定面颜色" />
+            <color id="1466918930" value="#0000ff" name="未选定顶点颜色" />
+            <color id="1466918931" value="#ffff00" name="未选定面颜色" />
+        </category>
+        <category name="捕捉轴">
+            <color id="1751060405" value="#00ff00" name="预览" />
+            <color id="1751060406" value="#00ff00" name="拖动" />
+            <color id="1751060407" value="#00c8c8" name="边界框" />
+        </category>
+        <category name="粒子流工具">
+            <color id="1835527538" value="#ffff00" name="碰撞图形" />
+            <color id="-832773846" value="#0000ff" name="粒子绑定" />
+            <color id="-171339374" value="#447395" name="mP 世界 Gizmo" />
+        </category>
+    </CustomColors>
+    <GridInfo gridIntensity="103" whiteOrigin="0" useGridColor="0" />
+</ADSK_CLR>

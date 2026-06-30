@@ -1,0 +1,5 @@
+name "whtools管理器"
+version 1.8
+
+run "install.ms"
+drop "install.ms"

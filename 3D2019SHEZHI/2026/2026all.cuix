@@ -1,0 +1,313 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ADSK_CUI>
+    <CUIWindows>
+        <Window objectName="ProjectsToolbar" name="项目" type="N" cType="1" />
+        <Window objectName="AutobackupToolbar" name="自动备份" type="N" cType="1" />
+        <Window objectName="V-Ray Toolbar" name="V-Ray Toolbar" type="N" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="10000" helpID="0" orientation="31" captionVisibility="0" iconName=":/VRayToolbar/Render">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName=":/VRayToolbar/Render" />
+                        <Fly iconName=":/VRayToolbar/RenderIPR" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="34" tip="提交至 Chaos Cloud 渲染" label="提交至 Chaos Cloud" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="1" tip="如果存在，则显示最近一次渲染的 V-Ray VFB" label="V-Ray VFB" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="2" tip="V-Ray 列表工具" label="V-Ray 列表" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="20" tip="创建 V-Ray 物理摄影机" label="V-Ray 物理摄影机" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="12" tip="创建 V-Ray 平面灯光" label="V-Ray 平面灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="13" tip="创建 V-Ray 穹顶灯光" label="V-Ray 穹顶灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="14" tip="创建 V-Ray 球体灯光" label="V-Ray 球体灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="15" tip="创建 V-Ray 网格灯光" label="V-Ray 网格灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="16" tip="创建 V-Ray 圆盘灯光" label="V-Ray 圆盘灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="17" tip="创建 V-Ray IES 灯光" label="V-Ray IES 灯光" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="19" tip="创建 V-Ray 太阳" label="V-Ray 太阳" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="18" tip="创建 V-Ray 环境光" label="V-Ray 环境光" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="3" tip="创建 V-Ray 代理" label="V-Ray 代理" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="4" tip="创建 V-Ray 贴花" label="V-Ray 贴花" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="68" tip="创建 V-Ray 高斯几何体" label="V-Ray 高斯几何体" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="10" tip="创建 V-Ray 平面" label="V-Ray 平面" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="24" tip="V-Ray Displacement 修改器" label="V-Ray Displacement 修改器" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="5" tip="创建 V-Ray 毛发" label="V-Ray 毛发" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="11" tip="创建 V-Ray 体积网格" label="V-Ray 体积网格" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="10023" helpID="0" orientation="31" captionVisibility="0" iconName=":/VRayToolbar/VrayMtl">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName=":/VRayToolbar/VrayMtl" />
+                        <Fly iconName=":/VRayToolbar/VrayFastSSS" />
+                        <Fly iconName=":/VRayToolbar/VrayHair" />
+                        <Fly iconName=":/VRayToolbar/VrayALSurface" />
+                        <Fly iconName=":/VRayToolbar/Vray2Sided" />
+                        <Fly iconName=":/VRayToolbar/VrayBlendMtl" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="73" tip="V-Ray 材质库浏览器" label="V-Ray 材质库浏览器" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="35" tip="Cosmos 浏览器" label="Chaos Cosmos 浏览器" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="75" tip="通过 V-Ray 对象属性制作 V-Ray 阴影捕捉器" label="V-Ray 阴影捕捉器" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-905641955" imageID="-1" imageName="" actionID="49" tip="帮助文档" label="帮助文档" />
+            </Items>
+        </Window>
+        <Window objectName="RDF_Kit" name="小梦工具条" type="N" cType="4" />
+        <Window objectName="Main Toolbar" name="主工具栏" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50034" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Undo" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50035" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Redo" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50010" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Link" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50011" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Unlink" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50036" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/BindToSpaceWarp" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="5" type="CTB_OTHER" width="70" height="280" controlID="30100" helpID="0" orientation="19" vertJustif="2" winStyle="1342177795" controlClassName="ComboBox" winText="全部" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50027" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/SelectObject" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50029" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/SelectByName" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50028" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/RectangularSelection">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/RectangularSelection" />
+                        <Fly iconName="MainUI/CircularSelection" />
+                        <Fly iconName="MainUI/FenceSelection" />
+                        <Fly iconName="MainUI/LassoSelection" />
+                        <Fly iconName="MainUI/PaintSelection" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="202" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/WindowCrossing" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50001" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Move" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50002" helpID="0" orientation="31" captionVisibility="0" iconName="Common/RotateCW" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50003" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/UniformScale">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/UniformScale" />
+                        <Fly iconName="MainUI/NonUniformScale" />
+                        <Fly iconName="MainUI/Squash" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50131" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/SelectAndPlace">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/SelectAndPlace" />
+                        <Fly iconName="MainUI/SelectAndRotate" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="5" type="CTB_OTHER" width="70" height="200" controlID="30101" helpID="0" orientation="19" vertJustif="2" winStyle="1342177795" controlClassName="ComboBox" winText="视图" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50009" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/UsePivotPointCenter">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/UsePivotPointCenter" />
+                        <Fly iconName="MainUI/UseSelectionCenter" />
+                        <Fly iconName="MainUI/UseTransformCoordinateCenter" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="0" imageID="-1" imageName="" actionID="59225" tip="" label="" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="30761" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/KeyboardOverrideToggle" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="40072" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/SnapsToggle3">
+                    <FlyOffCt flyInit="2" flyTimeout="300" flyDir="3">
+                        <Fly iconName="SnapsControls/SnapsToggle2" />
+                        <Fly iconName="SnapsControls/SnapsToggle2.5.png" />
+                        <Fly iconName="SnapsControls/SnapsToggle3" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="40074" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/AngleSnapToggle" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="40223" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/PercentSnapToggle" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="280" helpID="0" orientation="31" captionVisibility="0" iconName="SnapsControls/SpinnerSnapToggle" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="647394" iconName="MainUI/EditNamedSelectionSets" actionID="namedSelSets`Edit" tip="编辑命名选择集" label="" />
+                <Item typeID="5" type="CTB_OTHER" width="120" height="120" controlID="50037" helpID="0" orientation="19" vertJustif="2" winStyle="1344275266" controlClassName="ComboBox" winText="" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="40210" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Mirror" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50012" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/Align">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/Align" />
+                        <Fly iconName="MainUI/QuickAlign" />
+                        <Fly iconName="MainUI/NormalAlign" />
+                        <Fly iconName="MainUI/PlaceHighlight" />
+                        <Fly iconName="MainUI/AlignCamera" />
+                        <Fly iconName="MainUI/AlignToView" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="SESceneExplorer`Scene Explorer" tip="切换场景资源管理器" label="Toggle Scene Explorer" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="60545" iconName="MainUI/ToggleRibbon" actionID="26914" tip="切换功能区" label="" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50061" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/SchematicViewOpen" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50048" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/SlateMaterialEditor">
+                    <FlyOffCt flyInit="1" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/MaterialEditor" />
+                        <Fly iconName="MainUI/SlateMaterialEditor" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="60010" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/RenderSetup" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="0" imageID="-1" imageName="" actionID="348" tip="显示渲染帧窗口" label="&amp;Show Rendered Frame Window" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="50031" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/RenderProduction">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="MainUI/RenderProduction" />
+                        <Fly iconName="MainUI/RenderIterative" />
+                        <Fly iconName="MainUI/RenderActiveShade" />
+                        <Fly iconName="MainUI/RenderInA360" />
+                    </FlyOffCt>
+                </Item>
+            </Items>
+        </Window>
+        <Window objectName="Axis Constraints" name="轴约束" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50004" helpID="0" orientation="31" captionVisibility="0" iconName="AxisConstraints/ConstraintX" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50006" helpID="0" orientation="31" captionVisibility="0" iconName="AxisConstraints/ConstraintY" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50007" helpID="0" orientation="31" captionVisibility="0" iconName="AxisConstraints/ConstraintZ" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="50005" helpID="0" orientation="31" captionVisibility="0" iconName="AxisConstraints/ConstraintXY">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="AxisConstraints/ConstraintXY" />
+                        <Fly iconName="AxisConstraints/ConstraintYZ" />
+                        <Fly iconName="AxisConstraints/ConstraintZX" />
+                    </FlyOffCt>
+                </Item>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="0" imageID="-1" imageName="" actionID="40904" tip="在捕捉中启用轴约束切换" label="Enable Axis Constraints in Snaps Toggle" />
+            </Items>
+        </Window>
+        <Window objectName="Layers" name="层" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="SELayerExplorer`Scene Explorer" tip="切换层资源管理器" label="Toggle Layer Explorer" />
+                <Item typeID="5" type="CTB_OTHER" width="208" height="240" controlID="50502" helpID="0" orientation="19" vertJustif="2" winStyle="1344276755" controlClassName="ComboBox" winText="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="LayerCreate`Layers" tip="新建层(包含选择)" label="Create Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="LayerAdd`Layers" tip="将当前选择添加到当前层" label="Add to Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="LayerSelect`Layers" tip="选择当前层中的对象" label="Select Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="LayerSet`Layers" tip="设置当前层为选择的层" label="Set Layer" />
+            </Items>
+        </Window>
+        <Window objectName="State Sets" name="状态集" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="29771" iconName="StateSets/StateSets" actionID="33764" tip="状态集..." label="" />
+                <Item typeID="5" type="CTB_OTHER" width="170" height="24" controlID="0" helpID="0" orientation="19" vertJustif="2" winStyle="1342177280" controlClassName="StateSetsList" winText="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="29771" iconName="StateSets/ExportSelectionToCompositorLink" actionID="10974" tip="将当前选择导出到合成器链接" label="" />
+            </Items>
+        </Window>
+        <Window objectName="Extras" name="附加" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="0" iconName="Extras/AutoGrid" actionID="40462" tip="自动栅格" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="two_point_dist`Tools" tip="测量距离..." label="" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="60120" helpID="0" orientation="31" captionVisibility="0" iconName="Extras/Array">
+                    <FlyOffCt flyInit="0" flyTimeout="300" flyDir="3">
+                        <Fly iconName="Extras/Array" />
+                        <Fly iconName="Extras/SnapShot" />
+                        <Fly iconName="Extras/SpacingTool" />
+                        <Fly iconName="Extras/CloneAndAlignTool" />
+                    </FlyOffCt>
+                </Item>
+            </Items>
+        </Window>
+        <Window objectName="Render Shortcuts" name="渲染快捷方式" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="RenderPresetSlotA`Render" tip="渲染预设槽 A (按住 Shift 键并单击以保存)" label="A" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="RenderPresetSlotB`Render" tip="渲染预设槽 B (按住 Shift 键并单击以保存)" label="B" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="RenderPresetSlotC`Render" tip="渲染预设槽 C (按住 Shift 键并单击以保存)" label="C" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="5" type="CTB_OTHER" width="120" height="200" controlID="30105" helpID="0" orientation="19" vertJustif="2" winStyle="1342177795" controlClassName="ComboBox" winText="-----------------------------------------------------------------------------------------------------------------------------------------------------" />
+            </Items>
+        </Window>
+        <Window objectName="Snaps" name="捕捉" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToGridPointsToggle" actionID="40000" tip="捕捉到栅格点切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToPivotToggle" actionID="40001" tip="捕捉到轴切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToVertexToggle" actionID="40002" tip="捕捉到顶点切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToEndpointToggle" actionID="40003" tip="捕捉到端点切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToMidpointToggle" actionID="40004" tip="捕捉到中点切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToEdgeSegmentToggle" actionID="40005" tip="捕捉到边/线段切换" label="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="1259304063" iconName="SnapsControls/SnapToFaceToggle" actionID="40006" tip="捕捉到面切换" label="" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="6" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="0" imageID="-1" imageName="" actionID="40905" tip="捕捉到冻结对象切换" label="Snaps To Frozen Objects Toggle" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="0" imageID="-1" imageName="" actionID="40904" tip="在捕捉中启用轴约束切换" label="Enable Axis Constraints in Snaps Toggle" />
+            </Items>
+        </Window>
+        <Window objectName="Animation Layers" name="动画层" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="1" tip="启用动画层" label="Enable Anim Layers" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="10" tip="选择活动层对象" label="Select Active Layer Objects" />
+                <Item typeID="5" type="CTB_OTHER" width="208" height="240" controlID="50612" helpID="0" orientation="19" vertJustif="4" winStyle="1344276755" controlClassName="ComboBox" winText="" />
+                <Item typeID="5" type="CTB_OTHER" width="40" height="21" controlID="50613" helpID="0" orientation="19" vertJustif="-1" winStyle="1342177280" controlClassName="CustEdit" winText="" />
+                <Item typeID="5" type="CTB_OTHER" width="12" height="18" controlID="50614" helpID="0" orientation="19" vertJustif="-1" winStyle="1342177280" controlClassName="SpinnerControl" winText="" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="2" tip="动画层属性" label="Anim Layer Properties" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="3" tip="添加动画层" label="Add Anim Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="4" tip="删除动画层" label="Delete Anim Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="5" tip="剪切动画层" label="Cut Anim Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="6" tip="粘贴活动动画层" label="Paste Active Anim Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="7" tip="粘贴新层" label="Paste New Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="8" tip="塌陷动画层" label="Collapse Anim Layer" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="2053995757" imageID="-1" imageName="" actionID="9" tip="禁用动画层" label="Disable Anim Layer" />
+            </Items>
+        </Window>
+        <Window objectName="Containers" name="容器" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="0" tip="继承容器" label="Inherit Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="1" tip="利用所选内容创建容器" label="Create Container from Selection" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="2" tip="将选定项添加到容器中" label="Add Selected to Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="3" tip="从容器中移除选定项" label="Remove Selected from Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="5" tip="加载容器" label="Load Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="4" tip="卸载容器" label="Unload Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="7" tip="打开容器" label="Open Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="6" tip="关闭容器" label="Close Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="8" tip="保存容器" label="Save Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="9" tip="更新容器" label="Update Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="10" tip="重新加载容器" label="Reload Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="11" tip="使所有内容唯一" label="Make all Content Unique" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="12" tip="合并容器源" label="Merge Container Source" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="13" tip="编辑容器" label="Edit Container" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="14" tip="覆盖对象属性" label="Override Object Properties" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="-1172021248" imageID="-1" imageName="" actionID="16" tip="覆盖所有锁定" label="Override All Locks" />
+            </Items>
+        </Window>
+        <Window objectName="MassFX Toolbar" name="MassFX 工具栏" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="1009" helpID="0" orientation="31" captionVisibility="0" iconName="MassFX/WorldParameters" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="1000" helpID="0" orientation="31" captionVisibility="0" iconName="MassFX/SetSelectedAsDynamicRigidBody" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="1008" helpID="0" orientation="31" captionVisibility="0" iconName="MainUI/MCloth" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="1001" helpID="0" orientation="31" captionVisibility="0" iconName="MassFX/CreateRigidConstraint" />
+                <Item typeID="0" type="CTB_PUSHBUTTON" controlID="1002" helpID="0" orientation="31" captionVisibility="0" iconName="MassFX/CreateDynamicRagdoll" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="647394" iconName="MassFX/ResetSimulation" actionID="PxResetSimMS`PhysX" tip="将模拟实体重置为其原始状态" label="Reset Simulation" />
+                <Item typeID="1" type="CTB_CHECKBUTTON" controlID="1003" helpID="0" orientation="31" captionVisibility="0" iconName="MassFX/StartSimulation" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="647394" iconName="MassFX/AdvanceSimulationOneFrame" actionID="PxStepSimMS`PhysX" tip="下一个模拟帧" label="Step Simulation" />
+            </Items>
+        </Window>
+        <Window objectName="SnapPivotToolbar" name="捕捉工作轴工具" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="0" tip="放置工作轴" label="Place Working Pivot" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="1" tip="选择轴" label="Selection Pivot" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="8" tip="对齐工作轴" label="Align Working Pivot" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="0" iconName="MainUI/ResetWorking(W)Pivot" actionID="40845" tip="重置工作轴" label="" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="7" tip="将轴对齐到工作轴" label="Align Pivot to Working Pivot" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="3" tip="放置轴边界框" label="Place Pivot Bounding Box" />
+                <Item typeID="3" type="CTB_SEPARATOR" width="8" height="16" orientation="31" visible="1" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="5" tip="从工作轴创建栅格" label="Create Grid From Working Pivot" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="872562961" imageID="-1" imageName="" actionID="6" tip="从工作轴创建点" label="Create Point From Working Pivot" />
+            </Items>
+        </Window>
+        <Window objectName="TZyunku Toolbar" name="TZ云库工具栏" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="TZyunku_ConvertTool`TZ云库" tip="材质转换器" label="材质转换器" />
+            </Items>
+        </Window>
+        <Window objectName="Crazy_BOX" name="Crazy_BOX" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="mxscg_BOX_RConstruction`CrazyBOX" tip="快速建筑" label="快速建筑" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="mxscg_BOX_Graphictool`CrazyBOX" tip="图形工具" label="图形工具" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="mxscg_BOX_Refresh`CrazyBOX" tip="刷新面板" label="刷新面板" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="mxscg_BOX_user`CrazyBOX" tip="用户信息" label="用户信息" />
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="3" macroType="MB_TYPE_ACTION" actionTableID="647394" imageID="-1" imageName="" actionID="mxscg_BOX_Restart`CrazyBOX" tip="重新运行插件" label="重新运行插件" />
+            </Items>
+        </Window>
+        <Window objectName="WhtoolS" name="WhtoolS" type="T" cType="1" toolbarRows="1">
+            <Items>
+                <Item typeID="2" type="CTB_MACROBUTTON" width="0" height="0" controlID="0" macroTypeID="4" macroType="MB_TYPE_ACTION_CUSTOM" actionTableID="647394" imageID="1" imageName="StateSets" actionID="WH_Manager`whtool" tip="whtools 脚本管理器" label="" />
+            </Items>
+        </Window>
+    </CUIWindows>
+</ADSK_CUI>
