@@ -632,6 +632,7 @@ try(destroyDialog AutoPlanterRollout)catch()
             local chkR = chk_line_useRadius.checked
             local pathR = spn_line_pathRadius.value as float
             local lZ = spn_line_lawnZ.value as float
+            local tempSplineCopies = #()
             
             local matStone = sceneMaterials["Planter_Stone_Mat"]
             if matStone == undefined do matStone = StandardMaterial name:"Planter_Stone_Mat" diffuse:(color 180 180 180)
@@ -765,15 +766,18 @@ try(destroyDialog AutoPlanterRollout)catch()
                     return filletedPts
                 )
                 
-                for obj in sel do (
-                    if (superClassOf obj == Shape) do (
+                for sourceObj in sel do (
+                    if (superClassOf sourceObj == Shape) do (
+                        local obj = copy sourceObj
+                        append tempSplineCopies obj
+                        convertToSplineShape obj
                         local newObjs = #()
                         local stoneBox = if fVal > 0.001 then ChamferBox length:w width:slen height:h fillet:fVal filletSegs:1 smooth:off else Box length:w width:slen height:h
                         stoneBox.material = matStone
                         stoneBox.wirecolor = black
                         local stonesGroup = #()
                         
-                        local generateCurvedSolid = fn cPts w h fVal nameStr mat = (
+                        fn generateCurvedSolid cPts w h fVal nameStr mat = (
                             if cPts.count < 2 do return undefined
                             local pathSp = SplineShape()
                             addNewSpline pathSp
@@ -823,7 +827,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                             close lSpline 1
                             updateShape lSpline
                             
-                            lSpline.name = obj.name + "_Lawn_" + s as string
+                            lSpline.name = sourceObj.name + "_Lawn_" + s as string
                             lSpline.wirecolor = black
                             addModifier lSpline (Turn_To_Poly())
                             collapseStack lSpline
@@ -930,7 +934,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                             
                                             pathSp.material = matStone
                                             pathSp.wirecolor = black
-                                            pathSp.name = obj.name + "_Arc_" + s as string + "_" + i as string
+                                            pathSp.name = sourceObj.name + "_Arc_" + s as string + "_" + i as string
                                             collapseStack pathSp
                                             append stonesGroup pathSp
                                         )
@@ -968,7 +972,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                             tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                             tm.row4 = (p1 + p2) / 2.0
                                             inst.transform = tm
-                                            inst.name = obj.name + "_Stone_" + s as string + "_" + k as string + "_" + i as string
+                                            inst.name = sourceObj.name + "_Stone_" + s as string + "_" + k as string + "_" + i as string
                                             inst.wirecolor = black
                                             append stonesGroup inst
                                             currentP = p2
@@ -982,7 +986,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                             tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                             tm.row4 = (p1 + p2) / 2.0
                                             remBox.transform = tm
-                                            remBox.name = obj.name + "_Stone_Rem_" + s as string + "_" + k as string
+                                            remBox.name = sourceObj.name + "_Stone_Rem_" + s as string + "_" + k as string
                                             remBox.wirecolor = black
                                             remBox.material = matStone
                                             append stonesGroup remBox
@@ -1013,7 +1017,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                                 tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                                 tm.row4 = (p1 + p2) / 2.0
                                                 inst.transform = tm
-                                                inst.name = obj.name + "_Stone_" + s as string + "_" + k as string + "_" + i as string
+                                                inst.name = sourceObj.name + "_Stone_" + s as string + "_" + k as string + "_" + i as string
                                                 inst.wirecolor = black
                                                 append stonesGroup inst
                                                 currentP = p2
@@ -1026,7 +1030,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                                 tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                                 tm.row4 = (p1 + p2) / 2.0
                                                 remBox.transform = tm
-                                                remBox.name = obj.name + "_Stone_Rem_" + s as string + "_" + k as string
+                                                remBox.name = sourceObj.name + "_Stone_Rem_" + s as string + "_" + k as string
                                                 remBox.wirecolor = black
                                                 remBox.material = matStone
                                                 append stonesGroup remBox
@@ -1038,7 +1042,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                         for i = 1 to steps do append cPts (interpBezier3D obj s k (i as float / (steps + 1.0)))
                                         append cPts (getKnotPoint obj s (k+1))
                                         for p in cPts do p.z = obj.min.z
-                                        local swept = generateCurvedSolid cPts w h fVal (obj.name + "_Curve_" + s as string + "_" + k as string) matStone
+                                        local swept = generateCurvedSolid cPts w h fVal (sourceObj.name + "_Curve_" + s as string + "_" + k as string) matStone
                                         if swept != undefined do append stonesGroup swept
                                     )
                                 )
@@ -1063,7 +1067,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                                 tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                                 tm.row4 = (p1 + p2) / 2.0
                                                 inst.transform = tm
-                                                inst.name = obj.name + "_Stone_Closed_" + s as string + "_" + i as string
+                                                inst.name = sourceObj.name + "_Stone_Closed_" + s as string + "_" + i as string
                                                 inst.wirecolor = black
                                                 append stonesGroup inst
                                                 currentP = p2
@@ -1076,7 +1080,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                                 tm.row1 = dVec; tm.row3 = [0,0,1]; tm.row2 = normalize (cross tm.row3 tm.row1)
                                                 tm.row4 = (p1 + p2) / 2.0
                                                 remBox.transform = tm
-                                                remBox.name = obj.name + "_Stone_Closed_Rem_" + s as string
+                                                remBox.name = sourceObj.name + "_Stone_Closed_Rem_" + s as string
                                                 remBox.wirecolor = black
                                                 remBox.material = matStone
                                                 append stonesGroup remBox
@@ -1088,7 +1092,7 @@ try(destroyDialog AutoPlanterRollout)catch()
                                         for i = 1 to steps do append cPts (interpBezier3D obj s nKnots (i as float / (steps + 1.0)))
                                         append cPts (getKnotPoint obj s 1)
                                         for p in cPts do p.z = obj.min.z
-                                        local swept = generateCurvedSolid cPts w h fVal (obj.name + "_Curve_Closed_" + s as string) matStone
+                                        local swept = generateCurvedSolid cPts w h fVal (sourceObj.name + "_Curve_Closed_" + s as string) matStone
                                         if swept != undefined do append stonesGroup swept
                                     )
                                 )
@@ -1097,19 +1101,21 @@ try(destroyDialog AutoPlanterRollout)catch()
                         delete stoneBox
                         
                         if stonesGroup.count > 0 do (
-                            local g = group stonesGroup name:(obj.name + "_Stones")
+                            local g = group stonesGroup name:(sourceObj.name + "_Stones")
                             append newObjs g
                         )
                         
                         if newObjs.count > 0 do (
-                            group newObjs name:(obj.name + "_PlanterUnit")
+                            group newObjs name:(sourceObj.name + "_PlanterUnit")
                         )
+                        try(delete obj)catch()
                     )
                 )
             )
             ) catch (
                 messageBox ("发生错误: " + getCurrentException()) title:"错误"
             )
+            for tempSpline in tempSplineCopies where isValidNode tempSpline do try(delete tempSpline)catch()
             resumeEditing()
         )
         
