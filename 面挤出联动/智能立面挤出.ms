@@ -37,13 +37,13 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
 -- ==========================================
 -- 2. 智能立面综合工具主面板
 -- ==========================================
-rollout WH_SmartExtrude_Rollout "智能立面综合工具"
+rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
 (
     group " 智能面推拉 (操作面) " (
         checkbox chk_new_segment " 创建新分段 (不联动)" checked:false align:#left offset:[8, 2]
         
         spinner spn_dist_ext "推拉距离：" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6] across:2
-        button btn_align_ext "对齐到点" width:70 height:20 align:#right offset:[-8, 4] tooltip:"点击在视口中拾取一个参考点对齐推拉深度"
+        button btn_align_ext "对齐到点" width:70 height:20 align:#right offset:[-8, 4] tooltip:"拾取参考点并按独立封边对齐，避免拉扯相邻墙面"
         
         label lbl_preset_ext "常用预设 (左键执行，右键自定义)：" align:#left offset:[8, 6]
         button btn_p1_ext "120" width:70 height:20 align:#left across:3 offset:[2, 4]
@@ -93,8 +93,6 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具"
     local edit_var = ""
     local edit_val = 0.0
 
-    struct PolyData (oldFaceID, vArr, matID, sg, supportedChannels, mapFaces)
-
     -- ==========================================
     -- 配置管理
     -- ==========================================
@@ -135,208 +133,259 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具"
         setINISetting iniPath "ExtrudeSettings" "NewSegment" (if chk_new_segment.checked then "true" else "false")
     )
 
+    -- 挤出后边编号可能变化，因此只用挤出前保存的端点寻找生成侧面。
+    fn findGeneratedSideFace node generatedFaces oldV1 oldV2 = (
+        local result = undefined
+        for faceID in generatedFaces do (
+            if result == undefined do (
+                local faceVerts = polyOp.getVertsUsingFace node faceID
+                if faceVerts[oldV1] and faceVerts[oldV2] do result = faceID
+            )
+        )
+        result
+    )
+
+    fn findPairedNewVert node sideFace oldVert sideNewVerts = (
+        local result = undefined
+        local sideEdges = polyOp.getEdgesUsingFace node sideFace
+        local oldVertEdges = polyOp.getEdgesUsingVert node oldVert
+
+        for newVert in sideNewVerts do (
+            if result == undefined do (
+                local sharedEdges = sideEdges * oldVertEdges * (polyOp.getEdgesUsingVert node newVert)
+                if not sharedEdges.isEmpty do result = newVert
+            )
+        )
+
+        -- 零距离挤出时按位置作兜底，两个对应点重合，另一端仍相隔一条边长。
+        if result == undefined do (
+            local oldPos = polyOp.getVert node oldVert
+            local minDistance = 1e9
+            for newVert in sideNewVerts do (
+                local currentDistance = distance oldPos (polyOp.getVert node newVert)
+                if currentDistance < minDistance do (
+                    minDistance = currentDistance
+                    result = newVert
+                )
+            )
+        )
+        result
+    )
+
+    fn createPolygonSafe node vertArray = (
+        local faceID = polyOp.createPolygon node vertArray
+        local wasReversed = false
+        if (classOf faceID) != Integer do faceID = 0
+
+        if faceID <= 0 do (
+            local reversedVerts = #()
+            for i = vertArray.count to 1 by -1 do append reversedVerts vertArray[i]
+            faceID = polyOp.createPolygon node reversedVerts
+            if (classOf faceID) != Integer do faceID = 0
+            wasReversed = faceID > 0
+        )
+        #(faceID, wasReversed)
+    )
+
+    fn applyFaceData node faceID matID smoothGroup mapChannels mapFaces wasReversed = (
+        if faceID <= 0 do return false
+        polyOp.setFaceMatID node faceID matID
+        polyOp.setFaceSmoothGroup node faceID smoothGroup
+
+        for i = 1 to mapChannels.count do (
+            local mapFace = for mapVert in mapFaces[i] collect mapVert
+            if wasReversed do (
+                local reversedMapFace = #()
+                for j = mapFace.count to 1 by -1 do append reversedMapFace mapFace[j]
+                mapFace = reversedMapFace
+            )
+            try(polyOp.setMapFace node mapChannels[i] faceID mapFace)catch()
+        )
+        true
+    )
+
     -- ==========================================
-    -- 核心算法：智能面推拉 (带共面过滤及新分段模式)
+    -- 核心算法：智能面推拉 V2.9
     -- ==========================================
-    fn prepareExtrusion = (
+    fn prepareExtrusion independentSegment:false = (
         targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly do return false
+
         baseFaces = polyOp.getFaceSelection targetNode
         if baseFaces.isEmpty do return false
-        
+
+        -- 对齐到点用于窗台石、线脚等贴边构件时，必须保留原生侧面，
+        -- 不能重建相邻大墙面，否则会形成跨墙的长三角面。
+        local useIndependentSegment = chk_new_segment.checked or independentSegment
+
         extrudeNormal = [0,0,0]
-        for f in baseFaces do extrudeNormal += polyOp.getFaceNormal targetNode f
-        if extrudeNormal == [0,0,0] do extrudeNormal = [0,0,1]
+        for faceID in baseFaces do extrudeNormal += polyOp.getFaceNormal targetNode faceID
+        if (length extrudeNormal) < 0.0001 do return false
         extrudeNormal = normalize extrudeNormal
-        
-        -- 转换为世界坐标下的推拉法线，解决物体自身被旋转或 Pivot 修改导致 local 判定失效的问题
-        local extrudeNormal_world = normalize (extrudeNormal * targetNode.objectTransform.rotation)
-        
-        format "\n--- [DEBUG] prepareExtrusion Start ---\n"
-        format "Selected Node: %\n" targetNode.name
-        format "Base Faces Selection: %\n" (baseFaces as string)
-        format "extrudeNormal (Local): %\n" extrudeNormal
-        format "extrudeNormal_world: %\n" extrudeNormal_world
-        format "chk_new_segment.checked: %\n" chk_new_segment.checked
-        
+
         local allEdges = polyOp.getEdgesUsingFace targetNode baseFaces
-        local perimeterEdges = #{}
-        for e in allEdges do (
-            local f = polyOp.getFacesUsingEdge targetNode e
-            local overlap = f * baseFaces
-            if overlap.numberset == 1 do append perimeterEdges e
-        )
-        
-        local edgesToStretchData = #()
-        local openBoundaryEdges = #()
-        for e in perimeterEdges do (
-            local f = polyOp.getFacesUsingEdge targetNode e
-            if f.numberset == 2 then (
-                local shouldStretch = false
-                local dotValStr = "N/A"
-                local reasonStr = ""
-                local n_adj_world = [0,0,0]
-                local afArray = (f - baseFaces) as array
-                
-                -- 只有在未勾选“创建新分段”时，才进行拉伸过滤
-                if not chk_new_segment.checked then (
-                    local selectedFacesSharingEdge = f * baseFaces
-                    local sfArray = selectedFacesSharingEdge as array
-                    if sfArray.count > 0 then (
-                        local baseFace = sfArray[1]
-                        if afArray.count > 0 then (
-                            local adjFace = afArray[1]
-                            local n_adj = polyOp.getFaceNormal targetNode adjFace
-                            local n_bf = polyOp.getFaceNormal targetNode baseFace
-                            if n_adj != [0,0,0] and n_bf != [0,0,0] then (
-                                -- 将相邻面法线转为世界坐标
-                                n_adj_world = normalize (n_adj * targetNode.objectTransform.rotation)
-                                -- 计算相邻面世界法线与推拉世界法线的点积
-                                -- 点积绝对值 < 0.08 表示相邻面平行于世界坐标下的挤出运动方向，进行智能拉伸
-                                local dotVal = abs (dot n_adj_world extrudeNormal_world)
-                                dotValStr = dotVal as string
-                                if dotVal < 0.08 then (
-                                    shouldStretch = true
-                                    reasonStr = "Adjacent face parallel to motion (Stretches)"
-                                ) else (
-                                    reasonStr = "Adjacent face perpendicular to motion (Blocks)"
-                                )
-                            ) else (
-                                reasonStr = "Zero normal detected"
+        local openBoundaryData = #()
+        local stretchEdgeData = #()
+
+        for edgeID in allEdges do (
+            local edgeFaces = polyOp.getFacesUsingEdge targetNode edgeID
+            local selectedFaceCount = (edgeFaces * baseFaces).numberset
+            if selectedFaceCount == 1 do (
+                local edgeVerts = polyOp.getEdgeVerts targetNode edgeID
+                if edgeFaces.numberset == 1 then (
+                    append openBoundaryData #(edgeVerts[1], edgeVerts[2])
+                ) else if (edgeFaces.numberset == 2) and (not useIndependentSegment) then (
+                    local adjacentFaces = edgeFaces - baseFaces
+                    if adjacentFaces.numberset == 1 do (
+                        local adjacentFace = (adjacentFaces as array)[1]
+                        local adjacentNormal = polyOp.getFaceNormal targetNode adjacentFace
+                        if (length adjacentNormal) > 0.0001 do (
+                            adjacentNormal = normalize adjacentNormal
+                            if (abs (dot adjacentNormal extrudeNormal)) < 0.08 do (
+                                append stretchEdgeData #(adjacentFace, edgeVerts[1], edgeVerts[2])
                             )
-                        ) else (
-                            reasonStr = "No adjacent face in afArray"
                         )
-                    ) else (
-                        reasonStr = "No base face sharing edge"
                     )
-                ) else (
-                    reasonStr = "NewSegment enabled (No Linkage)"
                 )
-                
-                format "Edge %: adjFace=%, n_adj_world=%, dotVal=%, shouldStretch=%, reason=%\n" e (if afArray.count > 0 then afArray[1] else -1) n_adj_world dotValStr shouldStretch reasonStr
-                
-                if shouldStretch do (
-                    local adjFace = afArray[1]
-                    append edgesToStretchData #(adjFace, e)
-                )
-            ) else if f.numberset == 1 do (
-                append openBoundaryEdges e
             )
         )
-        
+
         local numFacesBefore = polyOp.getNumFaces targetNode
+        local numVertsBefore = polyOp.getNumVerts targetNode
         polyOp.extrudeFaces targetNode baseFaces 0.0
         local numFacesAfter = polyOp.getNumFaces targetNode
-        local sideFaces = #{ (numFacesBefore+1) .. numFacesAfter }
-        
-        -- 核心修正：在执行任何相邻面删除/重构以致面索引偏移前，立刻提取被挤出面目前的真实顶点索引
-        local verts = polyOp.getVertsUsingFace targetNode baseFaces
-        extrudeVerts = verts as array
-        origVertPos = for v in extrudeVerts collect (polyOp.getVert targetNode v)
-        
-        local polygonsToCreate = #()
+        local numVertsAfter = polyOp.getNumVerts targetNode
+        if (numFacesAfter <= numFacesBefore) or (numVertsAfter <= numVertsBefore) do return false
+
+        local newVerts = #{(numVertsBefore + 1) .. numVertsAfter}
+        local capFaces = #{}
+        local sideFaces = #{}
+
+        -- 不假设面编号：全新顶点面是移动面，旧/新混合顶点面是挤出侧面。
+        for faceID = 1 to numFacesAfter do (
+            local faceVerts = polyOp.getVertsUsingFace targetNode #{faceID}
+            local faceNewVerts = faceVerts * newVerts
+            if not faceNewVerts.isEmpty do (
+                if (faceVerts - newVerts).isEmpty then (
+                    append capFaces faceID
+                ) else (
+                    append sideFaces faceID
+                )
+            )
+        )
+
+        if capFaces.isEmpty or sideFaces.isEmpty do return false
+        extrudeVerts = (polyOp.getVertsUsingFace targetNode capFaces) as array
+        origVertPos = for vertID in extrudeVerts collect (polyOp.getVert targetNode vertID)
+        if extrudeVerts.count == 0 do return false
+
+        local stretchPlans = #()
         local facesToDelete = #{}
-        
-        for data in edgesToStretchData do (
-            local adjFace = data[1]
-            local oldEdge = data[2]
-            
-            local f = polyOp.getFacesUsingEdge targetNode oldEdge
-            local sf = (f * sideFaces) as array
-            local sideFace = sf[1]
-            
+
+        -- 顶部等与运动方向平行的邻面：把旧边替换为移动面的新边。
+        for edgeData in stretchEdgeData do (
+            local adjacentFace = edgeData[1]
+            local oldV1 = edgeData[2]
+            local oldV2 = edgeData[3]
+            local sideFace = findGeneratedSideFace targetNode sideFaces oldV1 oldV2
+
             if sideFace != undefined do (
-                local sfEdges = polyOp.getEdgesUsingFace targetNode sideFace
-                local adjEdges = polyOp.getEdgesUsingFace targetNode adjFace
-                local sharedEdgeArr = (sfEdges * adjEdges) as array
-                
-                if sharedEdgeArr.count > 0 do (
-                    local sharedEdge = sharedEdgeArr[1]
-                    local oldVerts = polyOp.getVertsUsingEdge targetNode sharedEdge
-                    local sfVerts = polyOp.getVertsUsingFace targetNode sideFace
-                    local newVerts = sfVerts - oldVerts
-                    
-                    local v_old1 = (oldVerts as array)[1]
-                    local v_old2 = (oldVerts as array)[2]
-                    local v_new1 = undefined
-                    local v_new2 = undefined
-                    
-                    for nv in newVerts do (
-                        local edges_nv = polyOp.getEdgesUsingVert targetNode nv
-                        local edges_v_old1 = polyOp.getEdgesUsingVert targetNode v_old1
-                        if not (edges_nv * edges_v_old1).isEmpty do v_new1 = nv
-                        
-                        local edges_v_old2 = polyOp.getEdgesUsingVert targetNode v_old2
-                        if not (edges_nv * edges_v_old2).isEmpty do v_new2 = nv
+                local sideFaceVerts = polyOp.getVertsUsingFace targetNode #{sideFace}
+                local sideNewVerts = sideFaceVerts * newVerts
+                local newV1 = findPairedNewVert targetNode sideFace oldV1 sideNewVerts
+                local newV2 = findPairedNewVert targetNode sideFace oldV2 sideNewVerts
+
+                if (newV1 != undefined) and (newV2 != undefined) and (newV1 != newV2) do (
+                    local planIndex = 0
+                    for i = 1 to stretchPlans.count do (
+                        if stretchPlans[i][1] == adjacentFace do planIndex = i
                     )
-                    
-                    if v_new1 != undefined and v_new2 != undefined do (
-                        local existingIdx = 0
-                        for i = 1 to polygonsToCreate.count do (
-                            if polygonsToCreate[i].oldFaceID == adjFace do existingIdx = i
-                        )
-                        
-                        local vArr = #()
-                        if existingIdx > 0 then (
-                            vArr = polygonsToCreate[existingIdx].vArr
-                        ) else (
-                            vArr = polyOp.getFaceVerts targetNode adjFace
-                        )
-                        
-                        for i = 1 to vArr.count do (
-                            if vArr[i] == v_old1 do vArr[i] = v_new1
-                            if vArr[i] == v_old2 do vArr[i] = v_new2
-                        )
-                        
-                        if existingIdx > 0 then (
-                            polygonsToCreate[existingIdx].vArr = vArr
-                        ) else (
-                            local matID = polyOp.getFaceMatID targetNode adjFace
-                            local sg = polyOp.getFaceSmoothGroup targetNode adjFace
-                            local numMaps = polyOp.getNumMaps targetNode
-                            local mapFaces = #()
-                            local supportedChannels = #()
-                            for c = 0 to numMaps do (
-                                if polyOp.getMapSupport targetNode c do (
-                                    append supportedChannels c
-                                    append mapFaces (polyOp.getMapFace targetNode c adjFace)
-                                )
+
+                    if planIndex == 0 do (
+                        local originalVerts = polyOp.getFaceVerts targetNode adjacentFace
+                        local replacementVerts = for vertID in originalVerts collect vertID
+                        local mapChannels = #()
+                        local mapFaces = #()
+                        local numMaps = polyOp.getNumMaps targetNode
+                        for mapChannel = 0 to numMaps do (
+                            if polyOp.getMapSupport targetNode mapChannel do (
+                                append mapChannels mapChannel
+                                append mapFaces (polyOp.getMapFace targetNode mapChannel adjacentFace)
                             )
-                            append polygonsToCreate (PolyData oldFaceID:adjFace vArr:vArr matID:matID sg:sg supportedChannels:supportedChannels mapFaces:mapFaces)
                         )
-                        
-                        facesToDelete += #{adjFace, sideFace}
+                        append stretchPlans #(
+                            adjacentFace,
+                            originalVerts,
+                            replacementVerts,
+                            polyOp.getFaceMatID targetNode adjacentFace,
+                            polyOp.getFaceSmoothGroup targetNode adjacentFace,
+                            mapChannels,
+                            mapFaces,
+                            #{},
+                            #()
+                        )
+                        planIndex = stretchPlans.count
+                    )
+
+                    local replacementVerts = stretchPlans[planIndex][3]
+                    for i = 1 to replacementVerts.count do (
+                        if replacementVerts[i] == oldV1 do replacementVerts[i] = newV1
+                        if replacementVerts[i] == oldV2 do replacementVerts[i] = newV2
+                    )
+                    stretchPlans[planIndex][3] = replacementVerts
+
+                    local planSideFaces = stretchPlans[planIndex][8]
+                    planSideFaces += #{sideFace}
+                    stretchPlans[planIndex][8] = planSideFaces
+                    local planSideRecords = stretchPlans[planIndex][9]
+                    append planSideRecords #(
+                        polyOp.getFaceVerts targetNode sideFace,
+                        polyOp.getFaceMatID targetNode sideFace,
+                        polyOp.getFaceSmoothGroup targetNode sideFace
+                    )
+                    stretchPlans[planIndex][9] = planSideRecords
+                )
+            )
+        )
+
+        for plan in stretchPlans do (
+            append facesToDelete plan[1]
+            facesToDelete += plan[8]
+        )
+
+        -- 开放底边只删除对应侧面，左右共面边的侧面保留为新增连接面。
+        if (not useIndependentSegment) and (openBoundaryData.count > 0) do (
+            for edgeData in openBoundaryData do (
+                local sideFace = findGeneratedSideFace targetNode sideFaces edgeData[1] edgeData[2]
+                if sideFace != undefined do facesToDelete += #{sideFace}
+            )
+        )
+
+        if not facesToDelete.isEmpty do polyOp.deleteFaces targetNode facesToDelete delIsoVerts:false
+
+        -- 重建被延伸的邻面；若失败则恢复原面和原生连接侧面，避免留下破洞。
+        for plan in stretchPlans do (
+            local createResult = createPolygonSafe targetNode plan[3]
+            if createResult[1] > 0 then (
+                applyFaceData targetNode createResult[1] plan[4] plan[5] plan[6] plan[7] createResult[2]
+            ) else (
+                local restoreResult = createPolygonSafe targetNode plan[2]
+                if restoreResult[1] > 0 do (
+                    applyFaceData targetNode restoreResult[1] plan[4] plan[5] plan[6] plan[7] restoreResult[2]
+                )
+                for sideRecord in plan[9] do (
+                    local sideResult = createPolygonSafe targetNode sideRecord[1]
+                    if sideResult[1] > 0 do (
+                        polyOp.setFaceMatID targetNode sideResult[1] sideRecord[2]
+                        polyOp.setFaceSmoothGroup targetNode sideResult[1] sideRecord[3]
                     )
                 )
             )
         )
-        
-        -- 只有在不创建新分段的情况下，我们才执行删除悬空边缘（使侧面不封口）
-        if not chk_new_segment.checked do (
-            for e in openBoundaryEdges do (
-                local f = polyOp.getFacesUsingEdge targetNode e
-                local sf = (f * sideFaces) as array
-                if sf.count == 1 do (
-                    facesToDelete += #{sf[1]}
-                )
-            )
-        )
-        
-        if not facesToDelete.isEmpty do (
-            polyOp.deleteFaces targetNode facesToDelete delIsoVerts:false
-            for p in polygonsToCreate do (
-                local newFaceID = polyOp.createPolygon targetNode p.vArr
-                if newFaceID > 0 do (
-                    polyOp.setFaceMatID targetNode newFaceID p.matID
-                    polyOp.setFaceSmoothGroup targetNode newFaceID p.sg
-                    for i = 1 to p.supportedChannels.count do (
-                        polyOp.setMapFace targetNode p.supportedChannels[i] newFaceID p.mapFaces[i]
-                    )
-                )
-            )
-        )
-        
+
+        baseFaces = capFaces
+        polyOp.setFaceSelection targetNode capFaces
+        format "[V2.9] caps=%, sides=%, stretchEdges=%, openEdges=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count
         return true
     )
 
@@ -418,12 +467,12 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具"
         return false
     )
 
-    fn executePushPull val = (
+    fn executePushPull val independentSegment:false = (
         if val != 0.0 do (
             undo "智能立面推拉" on (
                 local success = false
                 try (
-                    success = prepareExtrusion()
+                    success = prepareExtrusion independentSegment:independentSegment
                 ) catch (
                     format "Error in prepareExtrusion: %\n" (getCurrentException())
                     success = false
@@ -745,9 +794,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具"
             
             if factor > 0.0001 then (
                 local val = val_world / factor
-                executePushPull val
+                executePushPull val independentSegment:true
             ) else (
-                executePushPull val_world
+                executePushPull val_world independentSegment:true
             )
         )
     )
@@ -881,7 +930,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具"
                        + "2. 【特色 - 智能开洞】：向内推至墙体背面深度（背面有相匹配多边形），释放鼠标会自动删面并缝合焊接，实现穿透开洞！\n" \
                        + "3. 【特色 - 共面过滤】：平直大墙面上推拉局部面时，周围共面墙体不会变形拉伸，自动生成新边分段，与 SU 体验一致。\n" \
                        + "4. 【特色 - 创建新分段】：勾选后推拉相当于 SU 的 Ctrl 键，始终进行独立段挤出。\n" \
-                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，可将推拉高度完美对齐该点。\n\n" \
+                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并以独立封边方式对齐，适合窗台石等贴边构件。\n\n" \
                        + "【POLY线偏移】\n" \
                        + "- 在边层级选择边线，拖动偏移或一键应用常用预设，只保留单向智能偏移。\n\n" \
                        + "【公共操作】\n" \
