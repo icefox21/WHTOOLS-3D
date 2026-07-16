@@ -681,13 +681,15 @@ rollout WH_GridEdit_Rollout "网格编辑器" width:300 height:340 (
     on WH_GridEdit_Rollout open do ( pvCanvas.BackColor = (dotNetClass "System.Drawing.Color").FromArgb 40 40 45; refreshPreview() )
 )
 
-rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
+rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
 (
     -- Rollout Local Variables
     local presets = #()
     local pendingLayoutWidth = 400
     local pendingLayoutHeight = 510
     local contextMenuIndex = undefined
+    local openingError = ""
+    local openingDidModify = false
     
     -- Forward declarations of functions
     local makeWindow, applyPreset, partitionPoly, sliceAndCreateOpening, refreshListView, layoutPresetItems, loadPresets, saveAllPresetsToINI, applyMainUILayout
@@ -1055,12 +1057,12 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
     
     groupBox grpParam "参数设置 (Parameters)" pos:[8,246] width:234 height:168
     
-    checkbox chkHeightEnable "启用台高/飘窗/窗高" pos:[18,266] width:190 checked:true
+    checkbox chkHeightEnable "启用台高/内凹/窗高" pos:[18,266] width:190 checked:true
     
     spinner spnSill "台高:" range:[0,5000,1200] type:#float pos:[55,290] fieldwidth:68
     label lblSillUnit "mm" pos:[155,290] width:24 height:16
     
-    spinner spnDepth "飘窗:" range:[0,5000,250] type:#float pos:[215,290] fieldwidth:68
+    spinner spnDepth "内凹:" range:[0,5000,250] type:#float pos:[215,290] fieldwidth:68 tooltip:"沿选择面向墙体内部凹入；实体墙自动限制在墙厚内"
     label lblDepthUnit "mm" pos:[315,290] width:24 height:16
     
     spinner spnWinHeight "窗高:" range:[10,5000,1600] type:#float pos:[55,314] fieldwidth:68
@@ -1553,124 +1555,350 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
     )
 
     fn sliceAndCreateOpening obj f1 f2 h_bottom h_top depth_pull = in coordsys world (
+        openingError = ""
+        openingDidModify = false
+
+        if f1 == undefined or f1 < 1 or f1 > (polyop.getNumFaces obj) do (
+            openingError = "开洞失败：选择面的编号已经失效，请重新选择墙面。"
+            return undefined
+        )
+
         local n1 = polyop.getFaceNormal obj f1
-        local n2 = polyop.getFaceNormal obj f2
-        local c1 = polyop.getFaceCenter obj f1
-        local c2 = polyop.getFaceCenter obj f2
-        
-        local tempName = uniqueName "temp_slice_wall_"
-        local tempObj = detachFacesAsNode obj #{f1, f2} tempName
-        if tempObj == undefined do return undefined
-        
-        convertTo tempObj Editable_Poly
-        
-        -- Slice tempObj using world coordinates directly
-        polyop.slice tempObj #{1..(polyop.getNumFaces tempObj)} (ray [0, 0, h_bottom] [0, 0, 1]) inCoordsys:#world
-        
-        -- Find all faces in tempObj above h_bottom to slice at h_top
-        local coplanarFaces = #{}
-        for f = 1 to (polyop.getNumFaces tempObj) do (
-            local cf = polyop.getFaceCenter tempObj f
-            if cf.z > (h_bottom + 1.0) do append coplanarFaces f
-        )
-        polyop.slice tempObj coplanarFaces (ray [0, 0, h_top] [0, 0, 1]) inCoordsys:#world
-        
-        -- Find the two middle faces in tempObj
-        local midFaces = #()
-        for f = 1 to (polyop.getNumFaces tempObj) do (
-            local cf = polyop.getFaceCenter tempObj f
-            if cf.z > (h_bottom + 1.0) and cf.z < (h_top - 1.0) do append midFaces f
-        )
-        
-        if midFaces.count < 2 do (
-            delete tempObj
+        if (length n1) < 0.0001 do (
+            openingError = "开洞失败：无法读取选择面的法线。"
             return undefined
         )
-        
-        local mf1 = midFaces[1]
-        local mf2 = midFaces[2]
-        if (distance (polyop.getFaceCenter tempObj mf1) c1) > (distance (polyop.getFaceCenter tempObj mf2) c1) do (
-            mf1 = midFaces[2]
-            mf2 = midFaces[1]
-        )
-        
-        local vList = polyop.getFaceVerts tempObj mf1
-        local wList = polyop.getFaceVerts tempObj mf2
-        
-        if vList.count != 4 or wList.count != 4 do (
-            delete tempObj
-            return undefined
-        )
-        
-        local matchedW = #()
-        for i = 1 to 4 do (
-            local vPos = polyop.getVert tempObj vList[i]
-            local minD = 1e9
-            local bestW = undefined
-            for j = 1 to 4 do (
-                local wPos = polyop.getVert tempObj wList[j]
-                local d = distance vPos wPos
-                if d < minD do (
-                    minD = d
-                    bestW = wList[j]
+        n1 = normalize n1
+
+        -- Slice the selected wall face in place. Splitting its shared boundary edges keeps
+        -- the lower wall, side walls and the new extrusion in one Editable Poly topology.
+        fn splitFaceAtZ polyObj faceID zHeight = (
+            if faceID == undefined or faceID < 1 or faceID > (polyop.getNumFaces polyObj) do return #()
+
+            local sourceNormal = polyop.getFaceNormal polyObj faceID
+            if (length sourceNormal) < 0.0001 do return #()
+            sourceNormal = normalize sourceNormal
+
+            local oldFaceCount = polyop.getNumFaces polyObj
+            local faceBits = #{}
+            faceBits[faceID] = true
+
+            try (
+                polyop.slice polyObj faceBits (ray [0, 0, zHeight] [0, 0, 1]) inCoordsys:#world
+            ) catch ()
+            update polyObj
+
+            -- Recover faces previously touched by V8.1: its failed cut could have left
+            -- two vertices at the target height without the edge that joins them.
+            if (polyop.getNumFaces polyObj) <= oldFaceCount do (
+                local existingCutVerts = #()
+                if faceID <= (polyop.getNumFaces polyObj) do (
+                    for vertID in (polyop.getFaceVerts polyObj faceID) do (
+                        local worldPos = polyop.getVert polyObj vertID
+                        if abs(worldPos.z - zHeight) <= 0.01 do appendIfUnique existingCutVerts vertID
+                    )
+                )
+                if existingCutVerts.count == 2 do (
+                    try (polyop.createEdge polyObj existingCutVerts[1] existingCutVerts[2]) catch ()
+                    update polyObj
                 )
             )
-            append matchedW bestW
+
+            local newFaceCount = polyop.getNumFaces polyObj
+            if newFaceCount <= oldFaceCount do return #()
+
+            local resultFaces = #()
+            local candidateFaces = #(faceID)
+            for candidateID = (oldFaceCount + 1) to newFaceCount do append candidateFaces candidateID
+
+            for candidateID in candidateFaces do (
+                if candidateID >= 1 and candidateID <= newFaceCount do (
+                    local candidateNormal = polyop.getFaceNormal polyObj candidateID
+                    if (length candidateNormal) > 0.0001 do (
+                        candidateNormal = normalize candidateNormal
+                        if (dot candidateNormal sourceNormal) > 0.99 do appendIfUnique resultFaces candidateID
+                    )
+                )
+            )
+            resultFaces
         )
-        
-        local T = 0.0
-        for i = 1 to 4 do (
-            T += distance (polyop.getVert tempObj vList[i]) (polyop.getVert tempObj matchedW[i])
+
+        fn getFaceWorldZRange polyObj faceID = (
+            if faceID == undefined or faceID < 1 or faceID > (polyop.getNumFaces polyObj) do return undefined
+            local minZ = 1e9
+            local maxZ = -1e9
+            for vertID in (polyop.getFaceVerts polyObj faceID) do (
+                local worldPos = polyop.getVert polyObj vertID
+                if worldPos.z < minZ do minZ = worldPos.z
+                if worldPos.z > maxZ do maxZ = worldPos.z
+            )
+            if maxZ <= minZ then undefined else #(minZ, maxZ)
         )
-        T /= 4.0
-        if T <= 0.0 do T = 200.0
-        
-        local winVertPositions = #()
-        local t_ratio = 0.5
-        if T > 0.0 do (
-            t_ratio = depth_pull / T
-            if t_ratio < 0.01 do t_ratio = 0.01
-            if t_ratio > 0.99 do t_ratio = 0.99
+
+        fn findFaceByHeight polyObj faceList minZ maxZ = (
+            local result = undefined
+            for faceID in faceList do (
+                if faceID >= 1 and faceID <= (polyop.getNumFaces polyObj) do (
+                    local centerWorld = polyop.getFaceCenter polyObj faceID
+                    if centerWorld.z > minZ and centerWorld.z < maxZ do result = faceID
+                )
+            )
+            result
         )
-        
-        for i = 1 to 4 do (
-            local pV = polyop.getVert tempObj vList[i]
-            local pW = polyop.getVert tempObj matchedW[i]
-            local pWin = pV + (pW - pV) * t_ratio
-            append winVertPositions pWin
+
+        fn findFaceCrossingZ polyObj faceList zHeight tolerance:0.01 = (
+            local result = undefined
+            local bestSpan = 1e9
+            for faceID in faceList do (
+                local zRange = undefined
+                if faceID >= 1 and faceID <= (polyop.getNumFaces polyObj) do (
+                    local rangeMinZ = 1e9
+                    local rangeMaxZ = -1e9
+                    for vertID in (polyop.getFaceVerts polyObj faceID) do (
+                        local worldPos = polyop.getVert polyObj vertID
+                        if worldPos.z < rangeMinZ do rangeMinZ = worldPos.z
+                        if worldPos.z > rangeMaxZ do rangeMaxZ = worldPos.z
+                    )
+                    if rangeMaxZ > rangeMinZ do zRange = #(rangeMinZ, rangeMaxZ)
+                )
+                if zRange != undefined do (
+                    if zRange[1] < (zHeight - tolerance) and zRange[2] > (zHeight + tolerance) do (
+                        local span = zRange[2] - zRange[1]
+                        if span < bestSpan do (
+                            bestSpan = span
+                            result = faceID
+                        )
+                    )
+                )
+            )
+            result
         )
-        
-        local winPlaneObj = Editable_Poly()
+
+        fn findFaceReachingTop polyObj faceList minCenterZ targetTop tolerance:0.01 = (
+            local result = undefined
+            local bestTop = -1e9
+            for faceID in faceList do (
+                local zRange = undefined
+                if faceID >= 1 and faceID <= (polyop.getNumFaces polyObj) do (
+                    local rangeMinZ = 1e9
+                    local rangeMaxZ = -1e9
+                    for vertID in (polyop.getFaceVerts polyObj faceID) do (
+                        local worldPos = polyop.getVert polyObj vertID
+                        if worldPos.z < rangeMinZ do rangeMinZ = worldPos.z
+                        if worldPos.z > rangeMaxZ do rangeMaxZ = worldPos.z
+                    )
+                    if rangeMaxZ > rangeMinZ do zRange = #(rangeMinZ, rangeMaxZ)
+                )
+                if zRange != undefined do (
+                    local centerWorld = polyop.getFaceCenter polyObj faceID
+                    if centerWorld.z > minCenterZ and zRange[2] >= (targetTop - tolerance) do (
+                        if zRange[2] > bestTop do (
+                            bestTop = zRange[2]
+                            result = faceID
+                        )
+                    )
+                )
+            )
+            result
+        )
+        local sourceRange = getFaceWorldZRange obj f1
+        if sourceRange == undefined do (
+            openingError = "开洞失败：选择面没有有效的高度范围。"
+            return undefined
+        )
+
+        local sourceMinZ = sourceRange[1]
+        local sourceMaxZ = sourceRange[2]
+        local boundaryTolerance = amax 0.01 ((sourceMaxZ - sourceMinZ) * 0.00001)
+        if h_bottom < sourceMinZ do h_bottom = sourceMinZ
+        if h_top > sourceMaxZ do h_top = sourceMaxZ
+        if h_top <= (h_bottom + boundaryTolerance) do (
+            openingError = "开洞失败：窗顶高度必须高于窗台高度。"
+            return undefined
+        )
+
+        local useBottomBoundary = h_bottom <= (sourceMinZ + boundaryTolerance)
+        local useTopBoundary = h_top >= (sourceMaxZ - boundaryTolerance)
+        logDebug ("openingZ bottom=" + (h_bottom as string) + " top=" + (h_top as string) + " sourceTop=" + (sourceMaxZ as string) + " useTopBoundary=" + (useTopBoundary as string))
+
+        local firstSplitFaces = #(f1)
+        if not useBottomBoundary do (
+            local beforeVerts = polyop.getNumVerts obj
+            local beforeEdges = polyop.getNumEdges obj
+            local beforeFaces = polyop.getNumFaces obj
+            firstSplitFaces = splitFaceAtZ obj f1 h_bottom
+            if (polyop.getNumVerts obj) != beforeVerts or (polyop.getNumEdges obj) != beforeEdges or (polyop.getNumFaces obj) != beforeFaces do openingDidModify = true
+            if firstSplitFaces.count < 2 do (
+                openingError = "第一条横线连接失败：无法在窗台高度切开选择面。"
+                return undefined
+            )
+        )
+
+        local upperFace = undefined
+        if useTopBoundary then (
+            upperFace = findFaceReachingTop obj firstSplitFaces (h_bottom + boundaryTolerance) sourceMaxZ tolerance:boundaryTolerance
+        ) else (
+            upperFace = findFaceCrossingZ obj firstSplitFaces h_top tolerance:boundaryTolerance
+        )
+        if upperFace == undefined do (
+            openingError = "第一条横线已生成，但找不到覆盖窗顶高度的上方面。"
+            return undefined
+        )
+
+        local middleFace = upperFace
+        if not useTopBoundary do (
+            local beforeSecondVerts = polyop.getNumVerts obj
+            local beforeSecondEdges = polyop.getNumEdges obj
+            local beforeSecondFaces = polyop.getNumFaces obj
+            local secondSplitFaces = splitFaceAtZ obj upperFace h_top
+            if (polyop.getNumVerts obj) != beforeSecondVerts or (polyop.getNumEdges obj) != beforeSecondEdges or (polyop.getNumFaces obj) != beforeSecondFaces do openingDidModify = true
+            if secondSplitFaces.count < 2 do (
+                openingError = "第二条横线连接失败：无法在窗顶高度切开上方面。"
+                return undefined
+            )
+
+            middleFace = findFaceByHeight obj secondSplitFaces (h_bottom + boundaryTolerance) (h_top - boundaryTolerance)
+            if middleFace == undefined do (
+                openingError = "两条横线已经生成，但无法识别中间的窗面。"
+                return undefined
+            )
+        )
+        -- Depth is always a recess. A single wall face uses negative normal.
+        -- A solid wall uses the opposite face as the interior direction and never
+        -- crosses it: keep a 1 mm residual wall to avoid coplanar overlap.
+        local requestedDepth = abs depth_pull
+        local recessDepth = requestedDepth
+        local extrudeAmount = -recessDepth
+        if f2 != undefined and f2 >= 1 and f2 <= (polyop.getNumFaces obj) do (
+            local frontCenterWorld = polyop.getFaceCenter obj middleFace
+            local backCenterWorld = polyop.getFaceCenter obj f2
+            local toBack = backCenterWorld - frontCenterWorld
+            local normalWorld = n1
+            local signedWallDepth = dot toBack normalWorld
+            if abs(signedWallDepth) > 0.0001 do (
+                recessDepth = amin requestedDepth (amax 0.0 (abs(signedWallDepth) - 1.0))
+                if signedWallDepth >= 0.0 then (
+                    extrudeAmount = recessDepth
+                ) else (
+                    extrudeAmount = -recessDepth
+                )
+            )
+        )
+
+        local capFace = middleFace
+        if (abs extrudeAmount) > 0.0001 do (
+            local oldVertCount = polyop.getNumVerts obj
+            local middleFaceBits = #{}
+            middleFaceBits[middleFace] = true
+            polyop.extrudeFaces obj middleFaceBits extrudeAmount
+            update obj
+            openingDidModify = true
+
+            local newVertCount = polyop.getNumVerts obj
+            if newVertCount <= oldVertCount do (
+                openingError = "中间窗面挤出失败。"
+                return undefined
+            )
+
+            local newVerts = #{}
+            for vertID = (oldVertCount + 1) to newVertCount do newVerts[vertID] = true
+            capFace = undefined
+            for faceID = 1 to (polyop.getNumFaces obj) do (
+                local oneFace = #{}
+                oneFace[faceID] = true
+                local faceVerts = polyop.getVertsUsingFace obj oneFace
+                local faceNewVerts = faceVerts * newVerts
+                if not faceNewVerts.isEmpty and (faceVerts - newVerts).isEmpty do capFace = faceID
+            )
+            if capFace == undefined do (
+                openingError = "窗面已经挤出，但无法识别挤出后的端面。"
+                return undefined
+            )
+        )
+
+        local capVerts = polyop.getFaceVerts obj capFace
+        if capVerts.count < 3 do (
+            openingError = "挤出端面的顶点数量无效。"
+            return undefined
+        )
+
+        local winPlaneObj = box length:1 width:1 height:1
+        convertTo winPlaneObj Editable_Poly
+        polyop.deleteFaces winPlaneObj #{1..(polyop.getNumFaces winPlaneObj)}
+        update winPlaneObj
         winPlaneObj.name = uniqueName (obj.name + "_WindowPlane_")
-        
-        local newV1 = polyop.createVert winPlaneObj winVertPositions[1]
-        local newV2 = polyop.createVert winPlaneObj winVertPositions[2]
-        local newV3 = polyop.createVert winPlaneObj winVertPositions[3]
-        local newV4 = polyop.createVert winPlaneObj winVertPositions[4]
-        polyop.createPolygon winPlaneObj #(newV1, newV2, newV3, newV4)
-        
-        polyop.deleteFaces tempObj #{mf1, mf2}
-        
-        for i = 1 to 4 do (
-            local vA = vList[i]
-            local vB = vList[mod i 4 + 1]
-            local wA = matchedW[i]
-            local wB = matchedW[mod i 4 + 1]
-            polyop.createPolygon tempObj #(vA, vB, wB, wA)
+        winPlaneObj.transform = obj.transform
+        local windowVerts = #()
+        for vertID in capVerts do append windowVerts (polyop.createVert winPlaneObj (polyop.getVert obj vertID))
+        local windowFace = polyop.createPolygon winPlaneObj windowVerts
+        if (windowFace == undefined) or (windowFace <= 0) do (
+            try (delete winPlaneObj) catch ()
+            openingError = "窗洞已经生成，但创建后续窗体基准面失败。"
+            return undefined
         )
-        
-        polyop.attach obj tempObj
-        obj.weldThreshold = 1.0
-        local openEdges = polyop.getOpenEdges obj
-        if not openEdges.isEmpty do (
-            local weldVerts = polyop.getVertsUsingEdge obj openEdges
-            polyop.weldVertsByThreshold obj weldVerts
-        )
-        
+
+        local capFaceBits = #{}
+        capFaceBits[capFace] = true
+        polyop.deleteFaces obj capFaceBits delIsoVerts:false
+        update obj
         CenterPivot winPlaneObj
-        
         winPlaneObj
     )
+        fn createWindowPlaneFromFace obj f = (
+            local verts = polyop.getFaceVerts obj f
+            if verts.count < 3 do return undefined
+            local winPlane = box length:1 width:1 height:1
+            convertTo winPlane Editable_Poly
+            polyop.deleteFaces winPlane #{1..(polyop.getNumFaces winPlane)}
+            winPlane.name = uniqueName (obj.name + "_WindowPlane_")
+            winPlane.transform = obj.transform
+            local newVerts = #()
+            if verts.count == 4 then (
+                for v in verts do (
+                    append newVerts (polyop.createVert winPlane (polyop.getVert obj v))
+                )
+            ) else (
+                local pts = #()
+                for v in verts do append pts (polyop.getVert obj v)
+                local n = normalize (polyop.getFaceNormal obj f)
+                local vDir = [0,0,1] - (n * (dot [0,0,1] n))
+                if (length vDir) < 0.001 do vDir = [1,0,0] - (n * (dot [1,0,0] n))
+                if (length vDir) < 0.001 do vDir = [0,1,0] - (n * (dot [0,1,0] n))
+                vDir = normalize vDir
+                local hDir = normalize (cross vDir n)
+                local center = [0,0,0]
+                for p in pts do center += p
+                center = center / pts.count
+                local minH = 1e9
+                local maxH = -1e9
+                local minV = 1e9
+                local maxV = -1e9
+                for p in pts do (
+                    local d = p - center
+                    local hp = dot d hDir
+                    local vp = dot d vDir
+                    if hp < minH do minH = hp
+                    if hp > maxH do maxH = hp
+                    if vp < minV do minV = vp
+                    if vp > maxV do maxV = vp
+                )
+                local corners = #(
+                    center + hDir * minH + vDir * minV,
+                    center + hDir * maxH + vDir * minV,
+                    center + hDir * maxH + vDir * maxV,
+                    center + hDir * minH + vDir * maxV
+                )
+                for p in corners do append newVerts (polyop.createVert winPlane p)
+            )
+            if newVerts.count == 4 then (
+                polyop.createPolygon winPlane newVerts
+                CenterPivot winPlane
+                winPlane
+            ) else (
+                try(delete winPlane)catch()
+                undefined
+            )
+        )
 
         fn applyPreset colPositions rowPositions colSegData:undefined rowSegData:undefined = in coordsys world (
         logDebug "=== applyPreset 开始 ==="
@@ -1702,7 +1930,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                 local z_min = 1e9
                 local z_max = -1e9
                 for v in verts do (
-                    local pos = polyop.getVert obj v
+                    local pos = (in coordsys world (polyop.getVert obj v))
                     if pos.z < z_min do z_min = pos.z
                     if pos.z > z_max do z_max = pos.z
                 )
@@ -1718,7 +1946,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                 if h_bottom > z_max - 20.0 do h_bottom = z_max - 20.0
                 
                 if h_top < h_bottom + 10.0 do h_top = h_bottom + 10.0
-                if h_top > z_max - 1.0 do h_top = z_max - 1.0
+                if h_top > z_max do h_top = z_max
                 
                 local depth_pull = 0.0
                 if chkHeightEnable.checked do depth_pull = spnDepth.value
@@ -1734,7 +1962,8 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                     )
                 )
                 if winPlane == undefined do (
-                    messageBox "智能开洞失败，请确保所选面为规则的四边形墙面！" title:"提示"
+                    if openingDidModify do try (max undo) catch ()
+                    messageBox (if openingError != "" then openingError else "原墙开洞失败。") title:"提示"
                 )
             ) else if faceSel.count == 1 then (
                 logDebug "进入单面模式"
@@ -1748,7 +1977,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                     local z_min = 1e9
                     local z_max = -1e9
                     for v in verts do (
-                        local pos = polyop.getVert obj v
+                        local pos = (in coordsys world (polyop.getVert obj v))
                         if pos.z < z_min do z_min = pos.z
                         if pos.z > z_max do z_max = pos.z
                     )
@@ -1763,7 +1992,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                     if h_bottom > z_max - 20.0 do h_bottom = z_max - 20.0
                     
                     if h_top < h_bottom + 10.0 do h_top = h_bottom + 10.0
-                    if h_top > z_max - 1.0 do h_top = z_max - 1.0
+                    if h_top > z_max do h_top = z_max
                     
                     local depth_pull = 0.0
                     if chkHeightEnable.checked do depth_pull = spnDepth.value
@@ -1780,135 +2009,84 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                         )
                     )
                     if winPlane == undefined do (
-                        messageBox "智能开洞失败，请确保所选面为规则的四边形墙面！" title:"提示"
+                        if openingDidModify do try (max undo) catch ()
+                        messageBox (if openingError != "" then openingError else "原墙开洞失败。") title:"提示"
                     )
                 ) else (
-                    logDebug "未找到相反面，使用单面切割模式"
+                    logDebug "未找到相反面，使用原墙就地连线挤出模式"
                     local verts = polyop.getFaceVerts obj f1
                     local z_min = 1e9
                     local z_max = -1e9
                     for v in verts do (
-                        local pos = polyop.getVert obj v
+                        local pos = (in coordsys world (polyop.getVert obj v))
                         if pos.z < z_min do z_min = pos.z
                         if pos.z > z_max do z_max = pos.z
                     )
-                    logDebug ("z_min=" + z_min as string + " z_max=" + z_max as string)
-                    
+
                     local h_bottom = z_min
                     if chkHeightEnable.checked do h_bottom += spnSill.value
-                    
                     local h_top = z_max
                     if chkHeightEnable.checked do h_top = h_bottom + spnWinHeight.value
-                    
-                    local faceH = z_max - z_min
                     if h_bottom < z_min + 1.0 do h_bottom = z_min + 1.0
                     if h_bottom > z_max - 20.0 do h_bottom = z_max - 20.0
-                    
                     if h_top < h_bottom + 10.0 do h_top = h_bottom + 10.0
-                    if h_top > z_max - 1.0 do h_top = z_max - 1.0
-                    logDebug ("h_bottom=" + h_bottom as string + " h_top=" + h_top as string)
-                    
+                    if h_top > z_max do h_top = z_max
+
                     local depth_pull = 0.0
                     if chkHeightEnable.checked do depth_pull = spnDepth.value
-                    
                     local winPlane = undefined
-                    undo "单面划分片窗" on (
-                        local tempName = uniqueName "temp_slice_wall_"
-                        local n1 = polyop.getFaceNormal obj f1
-                        
-                        local tempObj = detachFacesAsNode obj #{f1} tempName
-                        logDebug ("tempObj: " + (if tempObj != undefined then tempObj.name else "undefined"))
-                        if tempObj != undefined do (
-                            convertTo tempObj Editable_Poly
-                            
-                            -- polyop.slice 使用世界坐标
-                            polyop.slice tempObj #{1..(polyop.getNumFaces tempObj)} (ray [0, 0, h_bottom] [0, 0, 1]) inCoordsys:#world
-                            
-                            local coplanarFaces = #{}
-                            for f = 1 to (polyop.getNumFaces tempObj) do (
-                                append coplanarFaces f
-                            )
-                            polyop.slice tempObj coplanarFaces (ray [0, 0, h_top] [0, 0, 1]) inCoordsys:#world
-                            logDebug ("两次切后面数: " + (polyop.getNumFaces tempObj) as string)
-                            
-                            local midF = undefined
-                            for f = 1 to (polyop.getNumFaces tempObj) do (
-                                local cf = polyop.getFaceCenter tempObj f
-                                logDebug ("面" + f as string + " Z=" + cf.z as string)
-                                if cf.z > (h_bottom + 0.1) and cf.z < (h_top - 0.1) do (
-                                    midF = f
-                                logDebug ("找到中间面: " + f as string)
-                                    exit
-                                )
-                            )
-                            logDebug ("midF: " + (if midF != undefined then midF as string else "undefined"))
-                            
-                            if midF != undefined then (
-                                -- 读取中间面的顶点位置
-                                local midVerts = polyop.getFaceVerts tempObj midF
-                                local vPos = #()
-                                for v in midVerts do (
-                                    append vPos (polyop.getVert tempObj v)
-                                )
-                                
-                                -- 删除中间面
-                                polyop.deleteFaces tempObj #{midF}
-                                
-                                -- 创建背面顶点（记录索引）
-                                local bvIdx = #()
-                                for p in vPos do (
-                                    append bvIdx (polyop.createVert tempObj (p - n1 * depth_pull))
-                                )
-                                
-                                -- 创建4个侧面（用顶点索引）
-                                for i = 1 to 4 do (
-                                    local i2 = mod i 4 + 1
-                                    local ok = polyop.createPolygon tempObj #(midVerts[i], midVerts[i2], bvIdx[i2], bvIdx[i])
-                                    logDebug ("侧面" + i as string + " ok=" + (ok as string))
-                                )
-                                -- 创建侧面和背面
-                                polyop.createPolygon tempObj #(bvIdx[1], bvIdx[2], bvIdx[3], bvIdx[4])
-                                logDebug ("tempObj面数: " + (polyop.getNumFaces tempObj) as string)
-                                
-                                -- 删除背面
-                                polyop.deleteFaces tempObj #{(polyop.getNumFaces tempObj)}
-                                logDebug ("删背面后: " + (polyop.getNumFaces tempObj) as string)
-                                
-                                -- Attach回墙
-                                polyop.attach obj tempObj
-                                obj.weldThreshold = 1.0
-                                polyop.weldVertsByThreshold obj #{1..(polyop.getNumVerts obj)}
-                                
-                                -- 创建窗面POLY
-                                local newName = uniqueName (obj.name + "_WindowPlane_")
-                                local dummy = box length:1 width:1 height:1
-                                convertTo dummy Editable_Poly
-                                polyop.deleteFaces dummy #{1..(polyop.getNumFaces dummy)}
-                                dummy.name = newName
-                                local nv1 = polyop.createVert dummy (vPos[1] - n1 * depth_pull)
-                                local nv2 = polyop.createVert dummy (vPos[2] - n1 * depth_pull)
-                                local nv3 = polyop.createVert dummy (vPos[3] - n1 * depth_pull)
-                                local nv4 = polyop.createVert dummy (vPos[4] - n1 * depth_pull)
-                                polyop.createPolygon dummy #(nv1, nv2, nv3, nv4)
-                                CenterPivot dummy
-                                winPlane = dummy
-                                logDebug ("winPlane创建: " + winPlane.name)
-                            ) else (
-                                polyop.attach obj tempObj
-                                obj.weldThreshold = 1.0
-                                polyop.weldVertsByThreshold obj #{1..(polyop.getNumVerts obj)}
-                            )
-                        )
-                        
+                    undo "单面原墙连线挤出片窗" on (
+                        winPlane = sliceAndCreateOpening obj f1 undefined h_bottom h_top depth_pull
                         if winPlane != undefined do (
-                            logDebug ("partitionPoly前: 面数=" + (polyop.getNumFaces winPlane) as string + " 顶点数=" + (polyop.getNumVerts winPlane) as string)
                             select winPlane
                             max modify mode
                             partitionPoly winPlane undefined colPositions rowPositions colSegData:colSegData rowSegData:rowSegData
-                            logDebug ("partitionPoly后: 面数=" + (polyop.getNumFaces winPlane) as string + " 顶点数=" + (polyop.getNumVerts winPlane) as string)
                             polyop.flipNormals winPlane #{1..(polyop.getNumFaces winPlane)}
                             makeWindow()
                         )
+                    )
+                    if winPlane == undefined do (
+                        if openingDidModify do try (max undo) catch ()
+                        messageBox (if openingError != "" then openingError else "原墙开洞失败。") title:"提示"
+                    )
+                )
+            ) else if faceSel.count > 2 then (
+                undo "多面平面片窗" on (
+                    local faceSet = polyop.getFaceSelection obj
+                    local winPlanes = #()
+                    local failedCount = 0
+                    for f in faceSel do (
+                        local winPlane = createWindowPlaneFromFace obj f
+                        if winPlane != undefined then (
+                            append winPlanes winPlane
+                        ) else (
+                            failedCount += 1
+                        )
+                    )
+                    if winPlanes.count > 0 then (
+                        try (polyop.deleteFaces obj faceSet) catch ()
+                        local madeCount = 0
+                        for winPlane in winPlanes do (
+                            local okMade = false
+                            try (
+                                select winPlane
+                                max modify mode
+                                partitionPoly winPlane undefined colPositions rowPositions colSegData:colSegData rowSegData:rowSegData
+                                polyop.flipNormals winPlane #{1..(polyop.getNumFaces winPlane)}
+                                select winPlane
+                                makeWindow()
+                                madeCount += 1
+                                okMade = true
+                            ) catch (
+                                failedCount += 1
+                            )
+                            if not okMade do try(delete winPlane)catch()
+                        )
+                        if failedCount > 0 do (
+                            messageBox ("批量生成完成 " + madeCount as string + "/" + faceSel.count as string + " 个。\n有 " + failedCount as string + " 个面没有成功，请检查这些面是否过窄、重叠或拓扑异常。") title:"提示"
+                        )
+                    ) else (
+                        messageBox "没有可生成的有效面，请检查选择的面是否过窄、重叠或拓扑异常。" title:"提示"
                     )
                 )
             ) else if isSingleQuadPlane obj then (
@@ -1920,7 +2098,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
                     makeWindow()
                 )
             ) else (
-                messageBox "请在 Editable Poly 中选择 1 个或 2 个相反的墙面，或者选择一个单面的平面物体！" title:"提示"
+                messageBox "请在 Editable Poly 中选择 1 个、2 个相反墙面，或多个四边形平面面；也可以选择一个单面的平面物体。" title:"提示"
             )
         ) else (
             messageBox "请选择且仅选择一个对象！" title:"提示"
@@ -2101,6 +2279,66 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
         foundMat
     )
 
+    fn isVrayMaterial m = (
+        local r = false
+        try ( if VRayMtl != undefined and (classOf m) == VRayMtl do r = true ) catch ()
+        r
+    )
+
+    fn applyOldPchFrameMaterial m = (
+        if m == undefined do return undefined
+        m.name = "窗框"
+        if isVrayMaterial m then (
+            m.diffuse = color 11 11 12
+            try(m.reflection = color 80 80 80)catch()
+            try(m.hilight_glossiness = 0.75)catch()
+            try(m.reflection_glossiness = 0.75)catch()
+            try(m.reflection_fresnel = true)catch()
+            try(m.reflection_ior = 2.2)catch()
+        ) else (
+            try(m.diffuse = color 50 50 50)catch()
+            try(m.opacity = 100)catch()
+        )
+        m
+    )
+
+    fn applyOldPchGlassMaterial m = (
+        if m == undefined do return undefined
+        m.name = "玻璃"
+        if isVrayMaterial m then (
+            m.diffuse = color 10 15 20
+            try(m.reflection = color 69 69 69)catch()
+            try(m.hilight_glossiness = 1.0)catch()
+            try(m.reflection_glossiness = 1.0)catch()
+            try(m.reflection_fresnel = false)catch()
+            try(m.reflection_ior = 1.8)catch()
+            try(m.refraction = color 180 190 200)catch()
+            try(m.refraction_glossiness = 1.0)catch()
+            try(m.refraction_ior = 1.52)catch()
+            try(m.refraction_affectShadows = true)catch()
+            try(m.reflection_maxDepth = 5)catch()
+            try(m.refraction_maxDepth = 8)catch()
+        ) else (
+            try(m.diffuse = color 10 30 50)catch()
+            try(m.opacity = 20)catch()
+        )
+        m
+    )
+
+    fn makeOldPchFrameMaterial = (
+        local hasVray = false
+        try ( if VRayMtl != undefined do hasVray = true ) catch()
+        local m = if hasVray then (VRayMtl name:"窗框") else (StandardMaterial name:"窗框")
+        applyOldPchFrameMaterial m
+    )
+
+    fn makeOldPchGlassMaterial = (
+        local hasVray = false
+        try ( if VRayMtl != undefined do hasVray = true ) catch()
+        local m = if hasVray then (VRayMtl name:"玻璃") else (StandardMaterial name:"玻璃")
+        applyOldPchGlassMaterial m
+    )
+
     fn cleanFlatLines obj preVerts = (
         local numE = polyop.getNumEdges obj
         if numE == 0 do return()
@@ -2160,50 +2398,8 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V2.3" width:430 height:510
             suspendEditing()
             
             undo "MakeWindow UltraFast" on (
-                local frameMat = getOrCreatePchMaterial "窗框" (fn _createF = (
-                    local hasVray = false
-                    try ( if VRayMtl != undefined do hasVray = true ) catch()
-                    local m
-                    if hasVray then (
-                        m = VRayMtl name:"窗框"
-                        m.diffuse = color 11 11 12
-                        try(m.reflection = color 80 80 80)catch() 
-                        try(m.hilight_glossiness = 0.75)catch()
-                        try(m.reflection_glossiness = 0.75)catch() 
-                        try(m.reflection_fresnel = true)catch()
-                        try(m.reflection_ior = 2.2)catch() 
-                    ) else (
-                        m = StandardMaterial name:"窗框"
-                        m.diffuse = color 50 50 50
-                    )
-                    m
-                ))
-                
-                local glMat = getOrCreatePchMaterial "玻璃" (fn _createG = (
-                    local hasVray = false
-                    try ( if VRayMtl != undefined do hasVray = true ) catch()
-                    local m
-                    if hasVray then (
-                        m = VRayMtl name:"玻璃"
-                        m.diffuse = color 10 15 20 
-                        try(m.reflection = color 69 69 69)catch()
-                        try(m.hilight_glossiness = 1.0)catch()
-                        try(m.reflection_glossiness = 1.0)catch()
-                        try(m.reflection_fresnel = false)catch()
-                        try(m.reflection_ior = 1.8)catch()
-                        try(m.refraction = color 180 190 200)catch() 
-                        try(m.refraction_glossiness = 1.0)catch()
-                        try(m.refraction_ior = 1.52)catch()
-                        try(m.refraction_affectShadows = true)catch() 
-                        try(m.reflection_maxDepth = 5)catch()
-                        try(m.refraction_maxDepth = 8)catch()
-                    ) else (
-                        m = StandardMaterial name:"玻璃"
-                        m.diffuse = color 10 30 50
-                        m.opacity = 20
-                    )
-                    m
-                ))
+                local frameMat = applyOldPchFrameMaterial (getOrCreatePchMaterial "窗框" makeOldPchFrameMaterial)
+                local glMat = applyOldPchGlassMaterial (getOrCreatePchMaterial "玻璃" makeOldPchGlassMaterial)
                 
                 local outerFrameSize = spnOuterSize.value
                 local innerFrameSize = spnInnerSize.value
@@ -2463,17 +2659,24 @@ try(closeRolloutFloater PC_Floater)catch()
 createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_sysmenu, #style_toolwindow, #style_resizing)
 --PCHPLUS_DATA_BEGIN
 --Settings|OuterSize=75.0|InnerSize=50.0|FrameDepth=80.0|GlassDepth=8.0|HeightEnable=true|SillSize=1200.0|DepthSize=250.0|WinHeightSize=1600.0|WindowWidth=430|WindowHeight=510
---PresetCount|12
+--PresetCount|19
 --Preset|1|1|27,48,24|35,64|0.0,0.271739,0.757246,1.0|0.0,0.355932,1.0|0.271739:2,1;0.757246:2,1|0.355932:1,3
 --Preset|2|2|26,45,28|72,27|0.0,0.264493,0.717391,1.0|0.0,0.720339,1.0|0.264493:2,1;0.717391:2,1|0.720339:1,2,3
 --Preset|3|3|30,69|68,31|0.0,0.304348,1.0|0.0,0.686441,1.0|0.304348:2,1|0.686441:1
 --Preset|4|4|69,30|32,67|0.0,0.695652,1.0|0.0,0.326271,1.0|0.695652:2,1|0.326271:2
 --Preset|5|5|25,47,27|70,29|0.0,0.257246,0.728261,1.0|0.0,0.70339,1.0|0.257246:2,1;0.728261:2,1|0.70339:1,3
 --Preset|6|6|48,51|75,24|0.0,0.485507,1.0|0.0,0.758475,1.0|0.485507:2,1|0.758475:1,2
---Preset|7|7|23,25,26,24|68,31|0.0,0.235507,0.492754,0.753623,1.0|0.0,0.682203,1.0|0.235507:2,1;0.492754:2,1;0.753623:2,1|0.682203:1,2,3,4
+--Preset|7|7|23,25,26,24|75,25|0.0,0.235507,0.492754,0.753623,1.0|0.0,0.75,1.0|0.235507:2,1;0.492754:2,1;0.753623:2,1|0.75:1,2,3,4
 --Preset|8|8|23,26,26,23|28,71|0.0,0.23913,0.5,0.764493,1.0|0.0,0.288136,1.0|0.23913:2;0.5:2,1;0.764493:2|0.288136:1,2,3,4
 --Preset|9|9|100|38,61|0.0,1.0|0.0,0.389831,1.0|-|0.389831:1
 --Preset|10|10|49,50|100|0.0,0.496377,1.0|0.0,1.0|0.496377:1|-
 --Preset|11|11|23,53,22|30,69|0.0,0.235507,0.771739,1.0|0.0,0.309322,1.0|0.235507:2,1;0.771739:2,1|0.309322:1,3
 --Preset|12|12|50,49|69,30|0.0,0.503623,1.0|0.0,0.699153,1.0|0.503623:1|0.699153:1,2
+--Preset|13|13|23,24,26,25|27,50,22|0.0,0.235507,0.481884,0.75,1.0|0.0,0.271186,0.779661,1.0|0.235507:2;0.481884:3,2,1;0.75:2|0.779661:1,2,3,4;0.271186:1,2,3,4
+--Preset|14|14|50,50|28,47,24|0.0,0.5,1.0|0.0,0.283898,0.758475,1.0|0.5:3,2,1|0.758475:1,2;0.283898:1,2
+--Preset|15|15|14,15,17,18,16,17|28,46,24|0.0,0.148551,0.300725,0.478261,0.663043,0.82971,1.0|0.0,0.288136,0.754237,1.0|0.148551:2;0.300725:3,2,1;0.478261:2;0.663043:3,2,1;0.82971:2|0.754237:1,2,3,4,5,6;0.288136:1,2,3,4,5,6
+--Preset|16|16|48,51|27,47,25|0.0,0.485507,1.0|0.0,0.271186,0.745763,1.0|0.485507:2|0.745763:1,2;0.271186:1,2
+--Preset|17|17|48,51|69,30|0.0,0.481884,1.0|0.0,0.694915,1.0|0.481884:2,1|0.694915:1,2
+--Preset|18|18|100|73,26|0.0,1.0|0.0,0.733051,1.0|-|0.733051:1
+--Preset|19|19|100|100|0.0,1.0|0.0,1.0|-|-
 --PCHPLUS_DATA_END
