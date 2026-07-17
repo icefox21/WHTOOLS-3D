@@ -37,13 +37,11 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
 -- ==========================================
 -- 2. 智能立面综合工具主面板
 -- ==========================================
-rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
+rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.2"
 (
     group " 智能面推拉 (操作面) " (
-        checkbox chk_link_adjacent " 联动相邻墙面（高级）" checked:false align:#left offset:[8, 2] tooltip:"默认独立封边；仅在需要拉伸相邻墙面时勾选"
-        
         spinner spn_dist_ext "推拉距离：" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6] across:2
-        button btn_align_ext "对齐到点" width:70 height:20 align:#right offset:[-8, 4] tooltip:"拾取参考点并按独立封边对齐，避免拉扯相邻墙面"
+        button btn_align_ext "对齐到点" width:70 height:20 align:#right offset:[-8, 4] tooltip:"拾取参考点；向内联动相邻墙面，向外生成独立封边"
         
         label lbl_preset_ext "常用预设 (左键执行，右键自定义)：" align:#left offset:[8, 6]
         button btn_p1_ext "120" width:70 height:20 align:#left across:3 offset:[2, 4]
@@ -69,6 +67,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
     local origVertPos = #()
     local extrudeNormal = [0,0,0]
     local isDragging_ext = false
+    local hasPrepared_ext = false
+    local dragUsesIndependent_ext = false
     local ignoreChange_ext = false
     
     -- 线偏移专属变量
@@ -106,8 +106,6 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
             p2_val_off = (getINISetting iniPath "OffsetPresets" "Preset2") as float
             last_val_off = (getINISetting iniPath "OffsetPresets" "LastValue") as float
             
-            local linkAdjacent = getINISetting iniPath "ExtrudeSettings" "LinkAdjacent"
-            if linkAdjacent != "" do chk_link_adjacent.checked = (linkAdjacent == "true")
         ) else (
             setINISetting iniPath "ExtrudePresets" "Preset1" "120.0"
             setINISetting iniPath "ExtrudePresets" "Preset2" "240.0"
@@ -117,7 +115,6 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
             setINISetting iniPath "OffsetPresets" "Preset2" "240.0"
             setINISetting iniPath "OffsetPresets" "LastValue" "0.0"
             
-            setINISetting iniPath "ExtrudeSettings" "LinkAdjacent" "false"
         )
     )
     
@@ -130,7 +127,6 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         setINISetting iniPath "OffsetPresets" "Preset2" (p2_val_off as string)
         setINISetting iniPath "OffsetPresets" "LastValue" (last_val_off as string)
         
-        setINISetting iniPath "ExtrudeSettings" "LinkAdjacent" (if chk_link_adjacent.checked then "true" else "false")
     )
 
     -- 挤出后边编号可能变化，因此只用挤出前保存的端点寻找生成侧面。
@@ -205,17 +201,17 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
     )
 
     -- ==========================================
-    -- 核心算法：智能面推拉 V3.0
+    -- 核心算法：智能面推拉 V3.2
+    -- 负值向内时延伸相邻墙面；正值向外时保留独立封边。
     -- ==========================================
-    fn prepareExtrusion linkAdjacent:false = (
+    fn prepareExtrusion independentSegment:false = (
         targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly do return false
 
         baseFaces = polyOp.getFaceSelection targetNode
         if baseFaces.isEmpty do return false
 
-        -- 独立封边是安全默认。只有显式要求联动时，才重建相邻墙面。
-        local useIndependentSegment = not linkAdjacent
+        local useIndependentSegment = independentSegment
 
         extrudeNormal = [0,0,0]
         for faceID in baseFaces do extrudeNormal += polyOp.getFaceNormal targetNode faceID
@@ -384,7 +380,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
 
         baseFaces = capFaces
         polyOp.setFaceSelection targetNode capFaces
-        format "[V3.0] caps=%, sides=%, stretchEdges=%, openEdges=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count
+        format "[V3.2] caps=%, sides=%, stretchEdges=%, openEdges=%, independent=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count useIndependentSegment
         return true
     )
 
@@ -466,12 +462,13 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         return false
     )
 
-    fn executePushPull val linkAdjacent:false = (
+    fn executePushPull val = (
         if val != 0.0 do (
+            local useIndependentSegment = val > 0.0
             undo "智能立面推拉" on (
                 local success = false
                 try (
-                    success = prepareExtrusion linkAdjacent:linkAdjacent
+                    success = prepareExtrusion independentSegment:useIndependentSegment
                 ) catch (
                     format "Error in prepareExtrusion: %\n" (getCurrentException())
                     success = false
@@ -647,33 +644,67 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         btn_last_off.text = "上次:" + (last_val_off as string)
     )
 
-    on chk_link_adjacent changed state do saveSettings()
-
     -- ------------------------------------------
     -- 智能面推拉拖动事件组
     -- ------------------------------------------
     on spn_dist_ext buttondown do (
-        theHold.SuperBegin()
-        local success = false
-        undo "智能立面推拉" on (
-            try (
-                success = prepareExtrusion linkAdjacent:chk_link_adjacent.checked
-            ) catch (
-                format "Error in prepareExtrusion: %\n" (getCurrentException())
-                success = false
-            )
-        )
-        if success then (
+        targetNode = selection[1]
+        hasPrepared_ext = false
+        dragUsesIndependent_ext = false
+        if targetNode != undefined and classOf targetNode == Editable_Poly and not (polyOp.getFaceSelection targetNode).isEmpty then (
+            theHold.SuperBegin()
             isDragging_ext = true
         ) else (
-            theHold.SuperCancel()
             isDragging_ext = false
         )
     )
 
     on spn_dist_ext changed val do (
         if ignoreChange_ext do return ()
-        if isDragging_ext and extrudeVerts.count > 0 and targetNode != undefined do (
+        if not isDragging_ext do return ()
+
+        if val == 0.0 do (
+            if hasPrepared_ext and extrudeVerts.count > 0 and targetNode != undefined do (
+                try (
+                    for i = 1 to extrudeVerts.count do (
+                        polyOp.setVert targetNode extrudeVerts[i] origVertPos[i]
+                    )
+                    update targetNode
+                ) catch ()
+            )
+            return ()
+        )
+
+        local useIndependentSegment = val > 0.0
+        if hasPrepared_ext and (dragUsesIndependent_ext != useIndependentSegment) do (
+            theHold.SuperCancel()
+            theHold.SuperBegin()
+            hasPrepared_ext = false
+        )
+
+        if not hasPrepared_ext do (
+            local success = false
+            undo "智能立面推拉" on (
+                try (
+                    success = prepareExtrusion independentSegment:useIndependentSegment
+                ) catch (
+                    format "Error in prepareExtrusion: %\n" (getCurrentException())
+                    success = false
+                )
+            )
+            if success then (
+                hasPrepared_ext = true
+                dragUsesIndependent_ext = useIndependentSegment
+            ) else (
+                theHold.SuperCancel()
+                isDragging_ext = false
+                hasPrepared_ext = false
+                ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
+                return ()
+            )
+        )
+
+        if extrudeVerts.count > 0 and targetNode != undefined do (
             try (
                 undo "智能立面推拉" on (
                     for i = 1 to extrudeVerts.count do (
@@ -685,6 +716,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
                 format "Error in spn_dist_ext changed: %\n" (getCurrentException())
                 theHold.SuperCancel()
                 isDragging_ext = false
+                hasPrepared_ext = false
+                ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
             )
         )
     )
@@ -692,7 +725,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
     on spn_dist_ext buttonup do (
         if isDragging_ext do (
             local finalVal = spn_dist_ext.value
-            if finalVal != 0.0 then (
+            if hasPrepared_ext and finalVal != 0.0 then (
                 try (
                     undo "智能立面推拉" on (
                         -- 写入最终位置
@@ -716,6 +749,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
                 theHold.SuperCancel()
             )
             isDragging_ext = false
+            hasPrepared_ext = false
+            dragUsesIndependent_ext = false
             ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
         )
     )
@@ -725,27 +760,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
             local val = spn_dist_ext.value
             if val != 0 do (
                 try (
-                    undo "智能立面推拉" on (
-                        local success = false
-                        try (
-                            success = prepareExtrusion linkAdjacent:chk_link_adjacent.checked
-                        ) catch (
-                            format "Error in prepareExtrusion: %\n" (getCurrentException())
-                            success = false
-                        )
-                        if success do (
-                            for i = 1 to extrudeVerts.count do (
-                                polyOp.setVert targetNode extrudeVerts[i] (origVertPos[i] + extrudeNormal * val)
-                            )
-                            -- 检查开洞
-                            checkAndCutHoles val
-                            update targetNode
-                            
-                            last_val_ext = val
-                            btn_last_ext.text = "上次:" + (last_val_ext as string)
-                            saveSettings()
-                        )
-                    )
+                    executePushPull val
                 ) catch (
                     format "Error in spn_dist_ext entered: %\n" (getCurrentException())
                 )
@@ -793,9 +808,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
             
             if factor > 0.0001 then (
                 local val = val_world / factor
-                executePushPull val linkAdjacent:false
+                executePushPull val
             ) else (
-                executePushPull val_world linkAdjacent:false
+                executePushPull val_world
             )
         )
     )
@@ -882,7 +897,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         )
     )
 
-    on btn_p1_ext pressed do executePushPull p1_val_ext linkAdjacent:chk_link_adjacent.checked
+    on btn_p1_ext pressed do executePushPull p1_val_ext
     on btn_p1_ext rightclick do (
         edit_btn = btn_p1_ext
         edit_var = "p1_ext"
@@ -890,7 +905,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         createDialog WH_EditPreset_Rollout modal:true
     )
 
-    on btn_p2_ext pressed do executePushPull p2_val_ext linkAdjacent:chk_link_adjacent.checked
+    on btn_p2_ext pressed do executePushPull p2_val_ext
     on btn_p2_ext rightclick do (
         edit_btn = btn_p2_ext
         edit_var = "p2_ext"
@@ -898,7 +913,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         createDialog WH_EditPreset_Rollout modal:true
     )
 
-    on btn_last_ext pressed do executePushPull last_val_ext linkAdjacent:chk_link_adjacent.checked
+    on btn_last_ext pressed do executePushPull last_val_ext
 
     on btn_p1_off pressed do executeOffset p1_val_off
     on btn_p1_off rightclick do (
@@ -927,9 +942,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
         local helpText = "【智能面推拉】\n" \
                        + "1. 在面层级下，选择需要推拉的墙体或窗洞面。\n" \
                        + "2. 【特色 - 智能开洞】：向内推至墙体背面深度（背面有相匹配多边形），释放鼠标会自动删面并缝合焊接，实现穿透开洞！\n" \
-                       + "3. 【特色 - 共面过滤】：平直大墙面上推拉局部面时，周围共面墙体不会变形拉伸，自动生成新边分段，与 SU 体验一致。\n" \
-                       + "4. 【高级 - 联动相邻墙面】：默认关闭，普通推拉会独立封边；仅在需要拉伸相邻墙面时勾选。\n" \
-                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并以独立封边方式对齐，适合窗台石等贴边构件。\n\n" \
+                       + "3. 【向内推】：输入负值时，使用联动相邻墙面的推拉方案。\n" \
+                       + "4. 【向外拉】：输入正值时，使用独立封边方案，适合窗台石和线脚。\n" \
+                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并按实际向内或向外方向使用对应方案。\n\n" \
                        + "【POLY线偏移】\n" \
                        + "- 在边层级选择边线，拖动偏移或一键应用常用预设，只保留单向智能偏移。\n\n" \
                        + "【公共操作】\n" \
