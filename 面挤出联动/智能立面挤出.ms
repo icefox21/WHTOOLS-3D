@@ -37,10 +37,10 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
 -- ==========================================
 -- 2. 智能立面综合工具主面板
 -- ==========================================
-rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
+rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.0"
 (
     group " 智能面推拉 (操作面) " (
-        checkbox chk_new_segment " 创建新分段 (不联动)" checked:false align:#left offset:[8, 2]
+        checkbox chk_link_adjacent " 联动相邻墙面（高级）" checked:false align:#left offset:[8, 2] tooltip:"默认独立封边；仅在需要拉伸相邻墙面时勾选"
         
         spinner spn_dist_ext "推拉距离：" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6] across:2
         button btn_align_ext "对齐到点" width:70 height:20 align:#right offset:[-8, 4] tooltip:"拾取参考点并按独立封边对齐，避免拉扯相邻墙面"
@@ -106,8 +106,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
             p2_val_off = (getINISetting iniPath "OffsetPresets" "Preset2") as float
             last_val_off = (getINISetting iniPath "OffsetPresets" "LastValue") as float
             
-            local ns = getINISetting iniPath "ExtrudeSettings" "NewSegment"
-            if ns != "" do chk_new_segment.checked = (ns == "true")
+            local linkAdjacent = getINISetting iniPath "ExtrudeSettings" "LinkAdjacent"
+            if linkAdjacent != "" do chk_link_adjacent.checked = (linkAdjacent == "true")
         ) else (
             setINISetting iniPath "ExtrudePresets" "Preset1" "120.0"
             setINISetting iniPath "ExtrudePresets" "Preset2" "240.0"
@@ -117,7 +117,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
             setINISetting iniPath "OffsetPresets" "Preset2" "240.0"
             setINISetting iniPath "OffsetPresets" "LastValue" "0.0"
             
-            setINISetting iniPath "ExtrudeSettings" "NewSegment" "false"
+            setINISetting iniPath "ExtrudeSettings" "LinkAdjacent" "false"
         )
     )
     
@@ -130,7 +130,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         setINISetting iniPath "OffsetPresets" "Preset2" (p2_val_off as string)
         setINISetting iniPath "OffsetPresets" "LastValue" (last_val_off as string)
         
-        setINISetting iniPath "ExtrudeSettings" "NewSegment" (if chk_new_segment.checked then "true" else "false")
+        setINISetting iniPath "ExtrudeSettings" "LinkAdjacent" (if chk_link_adjacent.checked then "true" else "false")
     )
 
     -- 挤出后边编号可能变化，因此只用挤出前保存的端点寻找生成侧面。
@@ -205,18 +205,17 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
     )
 
     -- ==========================================
-    -- 核心算法：智能面推拉 V2.9
+    -- 核心算法：智能面推拉 V3.0
     -- ==========================================
-    fn prepareExtrusion independentSegment:false = (
+    fn prepareExtrusion linkAdjacent:false = (
         targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly do return false
 
         baseFaces = polyOp.getFaceSelection targetNode
         if baseFaces.isEmpty do return false
 
-        -- 对齐到点用于窗台石、线脚等贴边构件时，必须保留原生侧面，
-        -- 不能重建相邻大墙面，否则会形成跨墙的长三角面。
-        local useIndependentSegment = chk_new_segment.checked or independentSegment
+        -- 独立封边是安全默认。只有显式要求联动时，才重建相邻墙面。
+        local useIndependentSegment = not linkAdjacent
 
         extrudeNormal = [0,0,0]
         for faceID in baseFaces do extrudeNormal += polyOp.getFaceNormal targetNode faceID
@@ -385,7 +384,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
 
         baseFaces = capFaces
         polyOp.setFaceSelection targetNode capFaces
-        format "[V2.9] caps=%, sides=%, stretchEdges=%, openEdges=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count
+        format "[V3.0] caps=%, sides=%, stretchEdges=%, openEdges=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count
         return true
     )
 
@@ -467,12 +466,12 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         return false
     )
 
-    fn executePushPull val independentSegment:false = (
+    fn executePushPull val linkAdjacent:false = (
         if val != 0.0 do (
             undo "智能立面推拉" on (
                 local success = false
                 try (
-                    success = prepareExtrusion independentSegment:independentSegment
+                    success = prepareExtrusion linkAdjacent:linkAdjacent
                 ) catch (
                     format "Error in prepareExtrusion: %\n" (getCurrentException())
                     success = false
@@ -648,7 +647,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         btn_last_off.text = "上次:" + (last_val_off as string)
     )
 
-    on chk_new_segment changed state do saveSettings()
+    on chk_link_adjacent changed state do saveSettings()
 
     -- ------------------------------------------
     -- 智能面推拉拖动事件组
@@ -658,7 +657,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         local success = false
         undo "智能立面推拉" on (
             try (
-                success = prepareExtrusion()
+                success = prepareExtrusion linkAdjacent:chk_link_adjacent.checked
             ) catch (
                 format "Error in prepareExtrusion: %\n" (getCurrentException())
                 success = false
@@ -729,7 +728,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
                     undo "智能立面推拉" on (
                         local success = false
                         try (
-                            success = prepareExtrusion()
+                            success = prepareExtrusion linkAdjacent:chk_link_adjacent.checked
                         ) catch (
                             format "Error in prepareExtrusion: %\n" (getCurrentException())
                             success = false
@@ -794,9 +793,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
             
             if factor > 0.0001 then (
                 local val = val_world / factor
-                executePushPull val independentSegment:true
+                executePushPull val linkAdjacent:false
             ) else (
-                executePushPull val_world independentSegment:true
+                executePushPull val_world linkAdjacent:false
             )
         )
     )
@@ -883,7 +882,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         )
     )
 
-    on btn_p1_ext pressed do executePushPull p1_val_ext
+    on btn_p1_ext pressed do executePushPull p1_val_ext linkAdjacent:chk_link_adjacent.checked
     on btn_p1_ext rightclick do (
         edit_btn = btn_p1_ext
         edit_var = "p1_ext"
@@ -891,7 +890,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         createDialog WH_EditPreset_Rollout modal:true
     )
 
-    on btn_p2_ext pressed do executePushPull p2_val_ext
+    on btn_p2_ext pressed do executePushPull p2_val_ext linkAdjacent:chk_link_adjacent.checked
     on btn_p2_ext rightclick do (
         edit_btn = btn_p2_ext
         edit_var = "p2_ext"
@@ -899,7 +898,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
         createDialog WH_EditPreset_Rollout modal:true
     )
 
-    on btn_last_ext pressed do executePushPull last_val_ext
+    on btn_last_ext pressed do executePushPull last_val_ext linkAdjacent:chk_link_adjacent.checked
 
     on btn_p1_off pressed do executeOffset p1_val_off
     on btn_p1_off rightclick do (
@@ -929,7 +928,7 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V2.9"
                        + "1. 在面层级下，选择需要推拉的墙体或窗洞面。\n" \
                        + "2. 【特色 - 智能开洞】：向内推至墙体背面深度（背面有相匹配多边形），释放鼠标会自动删面并缝合焊接，实现穿透开洞！\n" \
                        + "3. 【特色 - 共面过滤】：平直大墙面上推拉局部面时，周围共面墙体不会变形拉伸，自动生成新边分段，与 SU 体验一致。\n" \
-                       + "4. 【特色 - 创建新分段】：勾选后推拉相当于 SU 的 Ctrl 键，始终进行独立段挤出。\n" \
+                       + "4. 【高级 - 联动相邻墙面】：默认关闭，普通推拉会独立封边；仅在需要拉伸相邻墙面时勾选。\n" \
                        + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并以独立封边方式对齐，适合窗台石等贴边构件。\n\n" \
                        + "【POLY线偏移】\n" \
                        + "- 在边层级选择边线，拖动偏移或一键应用常用预设，只保留单向智能偏移。\n\n" \
