@@ -12,9 +12,42 @@ global WH_XFMat_CurIdx  = 0
 global WH_XFMat_Config_Rollout
 global WH_XFMat_V2_ActiveMtl = undefined
 global WH_XFMat_V2_ActiveIdx = 0
-global WH_XFMat_V2_UIControls = #()
-global WH_XFMat_V2_VisibilityTimer = undefined
-global WH_XFMat_V2_HiddenByMaxMinimize = false
+global WH_XFMat_V2_UIControls
+global WH_XFMat_V2_VisibilityTimer
+global WH_XFMat_V2_RebuildTimer
+global WH_XFMat_V2_RedrawTimer
+global WH_XFMat_V2_HiddenByMaxFocus = false
+global WH_XFMat_V2_IsBuilding = false
+global WH_XFMat_V2_PaintToolActive = false
+global WH_XFMat_V2_MaxProcessId = 0
+global WH_XFMat_V2_AutomationClass = undefined
+
+-- 重新运行脚本前先停掉上一实例的计时器，避免丢失引用后继续回调。
+try (
+    if WH_XFMat_V2_VisibilityTimer != undefined do (
+        WH_XFMat_V2_VisibilityTimer.Stop()
+        dotNet.removeAllEventHandlers WH_XFMat_V2_VisibilityTimer
+        WH_XFMat_V2_VisibilityTimer.Dispose()
+    )
+) catch()
+try (
+    if WH_XFMat_V2_RebuildTimer != undefined do (
+        WH_XFMat_V2_RebuildTimer.Stop()
+        dotNet.removeAllEventHandlers WH_XFMat_V2_RebuildTimer
+        WH_XFMat_V2_RebuildTimer.Dispose()
+    )
+) catch()
+try (
+    if WH_XFMat_V2_RedrawTimer != undefined do (
+        WH_XFMat_V2_RedrawTimer.Stop()
+        dotNet.removeAllEventHandlers WH_XFMat_V2_RedrawTimer
+        WH_XFMat_V2_RedrawTimer.Dispose()
+    )
+) catch()
+WH_XFMat_V2_VisibilityTimer = undefined
+WH_XFMat_V2_RebuildTimer = undefined
+WH_XFMat_V2_RedrawTimer = undefined
+if WH_XFMat_V2_UIControls == undefined do WH_XFMat_V2_UIControls = #()
 
 -- ===== 调试日志系统 =====
 fn WH_XFMat_LogDebug msg = (
@@ -96,8 +129,6 @@ global WH_XFMat_ReflectHelper_Obj = WH_XFMat_ReflectHelper()
 
 
 -- ===== 延迟重绘机制 (规避快捷键焦点阻塞) =====
-global WH_XFMat_V2_RedrawTimer = undefined
-
 fn WH_XFMat_V2_RedrawTimerTick sender args = (
     try (
         sender.Stop()
@@ -126,6 +157,38 @@ fn WH_XFMat_V2_TriggerRedraw = (
     ::WH_XFMat_V2_RedrawTimer.Start()
 )
 
+fn WH_XFMat_V2_StopRebuildTimer = (
+    if ::WH_XFMat_V2_RebuildTimer != undefined do (
+        try (
+            ::WH_XFMat_V2_RebuildTimer.Stop()
+            dotNet.removeAllEventHandlers ::WH_XFMat_V2_RebuildTimer
+            ::WH_XFMat_V2_RebuildTimer.Dispose()
+        ) catch()
+    )
+    ::WH_XFMat_V2_RebuildTimer = undefined
+)
+
+fn WH_XFMat_V2_RebuildTimerTick sender args = (
+    try (
+        sender.Stop()
+        dotNet.removeAllEventHandlers sender
+        sender.Dispose()
+    ) catch()
+    ::WH_XFMat_V2_RebuildTimer = undefined
+
+    if not ::WH_XFMat_V2_IsBuilding and WH_XFMat_Struct != undefined do (
+        WH_XFMat_Struct.buildUI()
+    )
+)
+
+fn WH_XFMat_V2_RequestRebuild = (
+    WH_XFMat_V2_StopRebuildTimer()
+    ::WH_XFMat_V2_RebuildTimer = dotNetObject "System.Windows.Forms.Timer"
+    ::WH_XFMat_V2_RebuildTimer.Interval = 50
+    dotNet.addEventHandler ::WH_XFMat_V2_RebuildTimer "Tick" ::WH_XFMat_V2_RebuildTimerTick
+    ::WH_XFMat_V2_RebuildTimer.Start()
+)
+
 fn WH_XFMat_V2_IsMaxMinimized = (
     try (
         local maxHwnd = windows.getMaxHWND()
@@ -152,52 +215,129 @@ fn WH_XFMat_V2_IsMaxMinimized = (
     )
 )
 
+fn WH_XFMat_V2_InitFocusProbe = (
+    if ::WH_XFMat_V2_AutomationClass == undefined do (
+        try (
+            dotNet.loadAssembly "UIAutomationClient"
+            ::WH_XFMat_V2_AutomationClass = dotNetClass "System.Windows.Automation.AutomationElement"
+        ) catch (
+            ::WH_XFMat_V2_AutomationClass = undefined
+        )
+    )
+    ::WH_XFMat_V2_AutomationClass != undefined
+)
+
+fn WH_XFMat_V2_GetCurrentProcessId = (
+    local currentProcess = undefined
+    local processId = 0
+    try (
+        currentProcess = (dotNetClass "System.Diagnostics.Process").GetCurrentProcess()
+        try (
+            processId = currentProcess.Id as integer
+        ) catch (
+            local processType = currentProcess.GetType()
+            local idProp = processType.GetProperty "Id"
+            processId = idProp.GetValue currentProcess undefined
+            if processId != undefined do processId = processId as integer
+        )
+    ) catch()
+    try(if currentProcess != undefined do currentProcess.Dispose())catch()
+    if processId == undefined then 0 else processId
+)
+
+fn WH_XFMat_V2_GetFocusedElement = (
+    local focused = undefined
+    try (
+        focused = ::WH_XFMat_V2_AutomationClass.FocusedElement
+    ) catch (
+        try (
+            local typeClass = dotNetClass "System.Type"
+            local automationType = typeClass.GetType "System.Windows.Automation.AutomationElement, UIAutomationClient"
+            local focusedProp = automationType.GetProperty "FocusedElement"
+            focused = focusedProp.GetValue undefined undefined
+        ) catch()
+    )
+    focused
+)
+
+fn WH_XFMat_V2_GetForegroundState = (
+    if WH_XFMat_V2_IsMaxMinimized() do return false
+
+    if ::WH_XFMat_V2_MaxProcessId <= 0 do (
+        ::WH_XFMat_V2_MaxProcessId = WH_XFMat_V2_GetCurrentProcessId()
+    )
+
+    if (::WH_XFMat_V2_MaxProcessId <= 0) or (WH_XFMat_V2_InitFocusProbe() == false) do return undefined
+
+    try (
+        local focused = WH_XFMat_V2_GetFocusedElement()
+        if focused == undefined do return undefined
+
+        local focusedPid = 0
+        try (
+            focusedPid = focused.Current.ProcessId as integer
+        ) catch (
+            local focusedType = focused.GetType()
+            local currentProp = focusedType.GetProperty "Current"
+            local currentInfo = currentProp.GetValue focused undefined
+            local infoType = currentInfo.GetType()
+            local pidProp = infoType.GetProperty "ProcessId"
+            focusedPid = pidProp.GetValue currentInfo undefined
+            if focusedPid != undefined do focusedPid = focusedPid as integer
+        )
+
+        if focusedPid == undefined or focusedPid <= 0 then undefined else (focusedPid == ::WH_XFMat_V2_MaxProcessId)
+    ) catch (
+        undefined
+    )
+)
+
+fn WH_XFMat_V2_SetTopMost formObj state = (
+    if formObj == undefined do return()
+    local helperClass = ::WH_XFMat_ReflectHelper_Obj
+    if helperClass != undefined then (
+        helperClass.setProp formObj "TopMost" state
+    ) else (
+        try(formObj.TopMost = state)catch()
+    )
+)
+
 fn WH_XFMat_ShowFloatingForms = (
+    try(WH_XFMat_V2_SetTopMost WH_XFMat_BgForm true)catch()
+    try(WH_XFMat_V2_SetTopMost WH_XFMat_Form true)catch()
+
     try (
         if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Show()
         if WH_XFMat_Form != undefined do WH_XFMat_Form.Show()
         if WH_XFMat_Form != undefined do WH_XFMat_Form.BringToFront()
     ) catch (
-        try (
-            if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Show()
-        ) catch()
-        try (
-            if WH_XFMat_Form != undefined do WH_XFMat_Form.Show()
-        ) catch()
+        try(if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Show())catch()
+        try(if WH_XFMat_Form != undefined do WH_XFMat_Form.Show())catch()
     )
+)
+
+fn WH_XFMat_HideFloatingForms = (
+    try(WH_XFMat_V2_SetTopMost WH_XFMat_Form false)catch()
+    try(WH_XFMat_V2_SetTopMost WH_XFMat_BgForm false)catch()
+    try(if WH_XFMat_Form != undefined do WH_XFMat_Form.Hide())catch()
+    try(if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Hide())catch()
 )
 
 fn WH_XFMat_V2_VisibilityTimerTick sender args = (
-    try (
-        local maxMin = WH_XFMat_V2_IsMaxMinimized()
-        if maxMin then (
-            if not ::WH_XFMat_V2_HiddenByMaxMinimize do (
-                try(if WH_XFMat_Form != undefined do WH_XFMat_Form.Hide())catch()
-                try(if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Hide())catch()
-                ::WH_XFMat_V2_HiddenByMaxMinimize = true
+    if not ::WH_XFMat_V2_IsBuilding and not ::WH_XFMat_V2_PaintToolActive do (
+        local maxForeground = WH_XFMat_V2_GetForegroundState()
+        if maxForeground == false then (
+            if not ::WH_XFMat_V2_HiddenByMaxFocus do (
+                ::WH_XFMat_V2_HiddenByMaxFocus = true
+                WH_XFMat_HideFloatingForms()
             )
-        ) else (
-            if ::WH_XFMat_V2_HiddenByMaxMinimize do (
-                ::WH_XFMat_V2_HiddenByMaxMinimize = false
+        ) else if maxForeground == true do (
+            if ::WH_XFMat_V2_HiddenByMaxFocus do (
+                ::WH_XFMat_V2_HiddenByMaxFocus = false
                 WH_XFMat_ShowFloatingForms()
             )
         )
-    ) catch()
-)
-
-fn WH_XFMat_V2_StartVisibilityTimer = (
-    if ::WH_XFMat_V2_VisibilityTimer != undefined do (
-        try (
-            ::WH_XFMat_V2_VisibilityTimer.Stop()
-            dotNet.removeAllEventHandlers ::WH_XFMat_V2_VisibilityTimer
-            ::WH_XFMat_V2_VisibilityTimer.Dispose()
-        ) catch()
     )
-    ::WH_XFMat_V2_HiddenByMaxMinimize = false
-    ::WH_XFMat_V2_VisibilityTimer = dotNetObject "System.Windows.Forms.Timer"
-    ::WH_XFMat_V2_VisibilityTimer.Interval = 300
-    dotNet.addEventHandler ::WH_XFMat_V2_VisibilityTimer "Tick" ::WH_XFMat_V2_VisibilityTimerTick
-    ::WH_XFMat_V2_VisibilityTimer.Start()
 )
 
 fn WH_XFMat_V2_StopVisibilityTimer = (
@@ -209,21 +349,19 @@ fn WH_XFMat_V2_StopVisibilityTimer = (
         ) catch()
     )
     ::WH_XFMat_V2_VisibilityTimer = undefined
+    ::WH_XFMat_V2_HiddenByMaxFocus = false
 )
 
-fn WH_XFMat_ShowFloatingForms = (
-    try (
-        if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Show()
-        if WH_XFMat_Form != undefined do WH_XFMat_Form.Show()
-        if WH_XFMat_Form != undefined do WH_XFMat_Form.BringToFront()
-    ) catch (
-        try (
-            if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Show()
-        ) catch()
-        try (
-            if WH_XFMat_Form != undefined do WH_XFMat_Form.Show()
-        ) catch()
-    )
+fn WH_XFMat_V2_StartVisibilityTimer = (
+    WH_XFMat_V2_StopVisibilityTimer()
+
+    ::WH_XFMat_V2_MaxProcessId = WH_XFMat_V2_GetCurrentProcessId()
+    WH_XFMat_V2_InitFocusProbe()
+
+    ::WH_XFMat_V2_VisibilityTimer = dotNetObject "System.Windows.Forms.Timer"
+    ::WH_XFMat_V2_VisibilityTimer.Interval = 200
+    dotNet.addEventHandler ::WH_XFMat_V2_VisibilityTimer "Tick" ::WH_XFMat_V2_VisibilityTimerTick
+    ::WH_XFMat_V2_VisibilityTimer.Start()
 )
 
 -- 极度防御性：黑线框状态检测与设置函数
@@ -347,9 +485,9 @@ rcMenu WH_XFMat_AnchorMenu (
         )
     )
     
-    on mi_m1 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 1; WH_XFMat_Struct.buildUI() ) )
-    on mi_m2 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 2; WH_XFMat_Struct.buildUI() ) )
-    on mi_m3 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 3; WH_XFMat_Struct.buildUI() ) )
+    on mi_m1 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 1; WH_XFMat_V2_RequestRebuild() ) )
+    on mi_m2 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 2; WH_XFMat_V2_RequestRebuild() ) )
+    on mi_m3 picked do ( if WH_XFMat_Struct != undefined do ( WH_XFMat_Struct.saveAssignMode 3; WH_XFMat_V2_RequestRebuild() ) )
     
     on mi_blackBorder picked do (
         if WH_XFMat_Struct != undefined do (
@@ -398,7 +536,7 @@ rcMenu WH_XFMat_AnchorMenu (
         if posY < 0 do posY = 0
         createDialog WH_XFMat_Config_Rollout style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) pos:[posX, posY]
     )
-    on mi_a_rebuild picked do ( if WH_XFMat_Struct != undefined do WH_XFMat_Struct.buildUI() )
+    on mi_a_rebuild picked do ( if WH_XFMat_Struct != undefined do WH_XFMat_V2_RequestRebuild() )
     on mi_a_guide picked do (
         local msg = "【浮动材质球V2 操作指南】\n\n"
         msg += "三种赋予模式（右键锚点切换）：\n"
@@ -410,6 +548,9 @@ rcMenu WH_XFMat_AnchorMenu (
         messagebox msg title:"操作指南"
     )
     on mi_a_close   picked do ( 
+        ::WH_XFMat_V2_IsBuilding = true
+        ::WH_XFMat_V2_PaintToolActive = false
+        try(WH_XFMat_V2_StopRebuildTimer())catch()
         try(WH_XFMat_V2_StopVisibilityTimer())catch()
         if ::WH_XFMat_V2_UIControls != undefined do (
             for c in ::WH_XFMat_V2_UIControls where c != undefined do try(dotNet.removeAllEventHandlers c)catch()
@@ -433,6 +574,7 @@ rcMenu WH_XFMat_AnchorMenu (
         )
         ::WH_XFMat_Form = undefined
         ::WH_XFMat_BgForm = undefined
+        ::WH_XFMat_V2_IsBuilding = false
     )
 )
 
@@ -476,6 +618,8 @@ tool WH_XFMat_PaintTool numPoints:100000 (
     )
     on stop do (
         popPrompt()
+        ::WH_XFMat_V2_PaintToolActive = false
+        ::WH_XFMat_V2_HiddenByMaxFocus = false
         WH_XFMat_ShowFloatingForms()
     )
     on mousePoint clickno do (
@@ -957,13 +1101,16 @@ struct WH_XFMat_Core (
         
         -- 显式指定赋值到全局变量空间
         ::WH_XFMat_PaintMtl = m
+        ::WH_XFMat_V2_PaintToolActive = true
         
-        -- 启动原生Tool工具。startTool是异步非阻塞的，会立刻结束当前的.NET点击事件，从而完美规避右键失灵问题
-        if WH_XFMat_Form != undefined do WH_XFMat_Form.Hide()
-        if WH_XFMat_BgForm != undefined do WH_XFMat_BgForm.Hide()
-        (dotNetClass "System.Windows.Forms.Application").DoEvents()
-        
-        startTool WH_XFMat_PaintTool
+        -- startTool 本身是异步的；不要调用 DoEvents，避免焦点定时器重入当前鼠标事件。
+        WH_XFMat_HideFloatingForms()
+        try (
+            startTool WH_XFMat_PaintTool
+        ) catch (
+            ::WH_XFMat_V2_PaintToolActive = false
+            WH_XFMat_ShowFloatingForms()
+        )
     ),
 
     fn pickFromObject idx = (
@@ -1053,7 +1200,7 @@ struct WH_XFMat_Core (
     fn clearSlot idx = (
         matArray[idx] = undefined
         saveSceneMats()
-        if WH_XFMat_Struct != undefined do WH_XFMat_Struct.buildUI()
+        if WH_XFMat_Struct != undefined do WH_XFMat_V2_RequestRebuild()
     ),
 
     -- ---------- 球体位图渲染 ----------
@@ -1329,7 +1476,11 @@ struct WH_XFMat_Core (
 
     -- ---------- 构建/重建 UI ----------
     fn buildUI = (
+        if ::WH_XFMat_V2_IsBuilding do return()
+        ::WH_XFMat_V2_IsBuilding = true
+
         -- 彻底销毁前解绑所有事件，防止垃圾回收期间指针访问异常 (ACCESS_VIOLATION)
+        try(WH_XFMat_V2_StopRebuildTimer())catch()
         try(WH_XFMat_V2_StopVisibilityTimer())catch()
         if ::WH_XFMat_V2_UIControls != undefined do (
             for c in ::WH_XFMat_V2_UIControls where c != undefined do try(dotNet.removeAllEventHandlers c)catch()
@@ -1607,14 +1758,18 @@ struct WH_XFMat_Core (
 
             -- 控件全部加入后再显示，避免透明窗体首次显示时漏绘锚点图标
             WH_XFMat_ShowFloatingForms()
-            try(WH_XFMat_V2_StartVisibilityTimer())catch()
 
             try (
                 WH_XFMat_Form.Invalidate()
                 WH_XFMat_Form.Update()
                 WH_XFMat_BgForm.Invalidate()
             ) catch()
+
+            ::WH_XFMat_V2_IsBuilding = false
+            try(WH_XFMat_V2_StartVisibilityTimer())catch()
         ) catch (
+            ::WH_XFMat_V2_IsBuilding = false
+            try(WH_XFMat_V2_StopVisibilityTimer())catch()
             messagebox ("透明版界面生成失败：\n" + getCurrentException()) title:"错误"
         )
     )
@@ -1661,19 +1816,19 @@ rollout WH_XFMat_Config_Rollout "布局设置" width:220 height:160 (
     on chk_name changed val do (
         if WH_XFMat_Struct != undefined do (
             WH_XFMat_Struct.saveShowName val
-            WH_XFMat_Struct.buildUI()
+            WH_XFMat_V2_RequestRebuild()
         )
     )
     on spn_cols changed val do (
         if WH_XFMat_Struct != undefined do (
             WH_XFMat_Struct.saveConfig val spn_rows.value
-            WH_XFMat_Struct.buildUI()
+            WH_XFMat_V2_RequestRebuild()
         )
     )
     on spn_rows changed val do (
         if WH_XFMat_Struct != undefined do (
             WH_XFMat_Struct.saveConfig spn_cols.value val
-            WH_XFMat_Struct.buildUI()
+            WH_XFMat_V2_RequestRebuild()
         )
     )
 )

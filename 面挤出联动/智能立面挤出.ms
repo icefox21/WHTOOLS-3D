@@ -5,14 +5,14 @@ global WH_SmartExtrude_Rollout
 global WH_EditPreset_Rollout
 
 -- ==========================================
--- 1. è‡ªå®šä¹‰é¢„è®¾å­é¢æ¿å®šä¹‰
+-- 1. ×Ô¶¨ÒåÔ¤Éè×ÓÃæ°å¶¨Òå
 -- ==========================================
-rollout WH_EditPreset_Rollout "è‡ªå®šä¹‰é¢„è®¾" width:220 height:95
+rollout WH_EditPreset_Rollout "×Ô¶¨ÒåÔ¤Éè" width:220 height:95
 (
-    label lbl_title "è¯·è¾“å…¥æ–°çš„é¢„è®¾æ•°å€¼ï¼š" align:#left offset:[12, 8]
-    spinner spn_new_val "æ•°å€¼ï¼š" range:[-1000000, 1000000, 0] type:#worldunits fieldwidth:80 align:#left offset:[12, 8]
-    button btn_ok "ç¡®å®š" width:70 height:22 align:#right offset:[-12, 12] across:2
-    button btn_cancel "å–æ¶ˆ" width:70 height:22 align:#left offset:[12, 12]
+    label lbl_title "ÇëÊäÈëĞÂµÄÔ¤ÉèÊıÖµ£º" align:#left offset:[12, 8]
+    spinner spn_new_val "ÊıÖµ£º" range:[-1000000, 1000000, 0] type:#worldunits fieldwidth:80 align:#left offset:[12, 8]
+    button btn_ok "È·¶¨" width:70 height:22 align:#right offset:[-12, 12] across:2
+    button btn_cancel "È¡Ïû" width:70 height:22 align:#left offset:[12, 12]
     
     on WH_EditPreset_Rollout open do (
         spn_new_val.value = WH_SmartExtrude_Rollout.edit_val
@@ -35,50 +35,50 @@ rollout WH_EditPreset_Rollout "è‡ªå®šä¹‰é¢„è®¾" width:220 height:95
 )
 
 -- ==========================================
--- 2. æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·ä¸»é¢æ¿
+-- 2. ÖÇÄÜÁ¢Ãæ×ÛºÏ¹¤¾ßÖ÷Ãæ°å
 -- ==========================================
-rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
+rollout WH_SmartExtrude_Rollout "ÖÇÄÜÁ¢Ãæ×ÛºÏ¹¤¾ß  V3.2"
 (
-    group " æ™ºèƒ½é¢æ¨æ‹‰ (æ“ä½œé¢) " (
-        spinner spn_dist_ext "æ¨æ‹‰è·ç¦»ï¼š" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6] across:2
-        button btn_align_ext "å¯¹é½åˆ°ç‚¹" width:70 height:20 align:#right offset:[-8, 4] tooltip:"æ‹¾å–å‚è€ƒç‚¹ï¼›å‘å†…è”åŠ¨ç›¸é‚»å¢™é¢ï¼Œå‘å¤–ç”Ÿæˆç‹¬ç«‹å°è¾¹"
+    group " ÖÇÄÜÃæÍÆÀ­ (²Ù×÷Ãæ) " (
+        checkbox chk_new_segment " ´´½¨ĞÂ·Ö¶Î£¨²»Áª¶¯£©" checked:false align:#left offset:[8, 2] tooltip:"´°Ì¨Ê¯¡¢Ïß½ÅµÈ¶ÀÁ¢¹¹¼ş¿ÉÊÖ¶¯¹´Ñ¡£»³¤Õ­Ìõ´ø»á×Ô¶¯ÆôÓÃ"
         
-        label lbl_preset_ext "å¸¸ç”¨é¢„è®¾ (å·¦é”®æ‰§è¡Œï¼Œå³é”®è‡ªå®šä¹‰)ï¼š" align:#left offset:[8, 6]
+        spinner spn_dist_ext "ÍÆÀ­¾àÀë£º" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6] across:2
+        button btn_align_ext "¶ÔÆëµ½µã" width:70 height:20 align:#right offset:[-8, 4] tooltip:"Ê°È¡²Î¿¼µã²¢°´¶ÀÁ¢·â±ß¶ÔÆë£¬±ÜÃâÀ­³¶ÏàÁÚÇ½Ãæ"
+        
+        label lbl_preset_ext "³£ÓÃÔ¤Éè (×ó¼üÖ´ĞĞ£¬ÓÒ¼ü×Ô¶¨Òå)£º" align:#left offset:[8, 6]
         button btn_p1_ext "120" width:70 height:20 align:#left across:3 offset:[2, 4]
         button btn_p2_ext "240" width:70 height:20 align:#center offset:[0, 4]
-        button btn_last_ext "ä¸Šæ¬¡:0" width:85 height:20 align:#right offset:[-2, 4]
+        button btn_last_ext "ÉÏ´Î:0" width:85 height:20 align:#right offset:[-2, 4]
     )
     
-    group " POLYçº¿åç§» (æ“ä½œçº¿) " (
-        spinner spn_dist_off "åç§»è·ç¦»ï¼š" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6]
+    group " POLYÏßÆ«ÒÆ (²Ù×÷Ïß) " (
+        spinner spn_dist_off "Æ«ÒÆ¾àÀë£º" range:[-1000000, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6]
         
-        label lbl_preset_off "å¸¸ç”¨é¢„è®¾ (å·¦é”®æ‰§è¡Œï¼Œå³é”®è‡ªå®šä¹‰)ï¼š" align:#left offset:[8, 6]
+        label lbl_preset_off "³£ÓÃÔ¤Éè (×ó¼üÖ´ĞĞ£¬ÓÒ¼ü×Ô¶¨Òå)£º" align:#left offset:[8, 6]
         button btn_p1_off "120" width:70 height:20 align:#left across:3 offset:[2, 4]
         button btn_p2_off "240" width:70 height:20 align:#center offset:[0, 4]
-        button btn_last_off "ä¸Šæ¬¡:0" width:85 height:20 align:#right offset:[-2, 4]
+        button btn_last_off "ÉÏ´Î:0" width:85 height:20 align:#right offset:[-2, 4]
     )
 
-    -- å…±äº«çŠ¶æ€å˜é‡
+    -- ¹²Ïí×´Ì¬±äÁ¿
     local targetNode = undefined
     
-    -- é¢æ¨æ‹‰ä¸“å±å˜é‡
+    -- ÃæÍÆÀ­×¨Êô±äÁ¿
     local baseFaces = #{}
     local extrudeVerts = #()
     local origVertPos = #()
     local extrudeNormal = [0,0,0]
     local isDragging_ext = false
-    local hasPrepared_ext = false
-    local dragUsesIndependent_ext = false
     local ignoreChange_ext = false
     
-    -- çº¿åç§»ä¸“å±å˜é‡
+    -- ÏßÆ«ÒÆ×¨Êô±äÁ¿
     local origEdgeSel = #{}
     local isDragging_off = false
     local ignoreChange_off = false
     local hasRunInDrag_off = false
     
-    -- ç»Ÿåˆçš„é…ç½®æ–‡ä»¶åŠé¢„è®¾å€¼ (ä¿å­˜åœ¨ plugcfg ç›®å½•ï¼Œä¿è¯è„šæœ¬ç›®å½•å¹²å‡€æ— æ‚ç‰©)
-    local iniPath = (getDir #plugcfg) + "\\æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·.ini"
+    -- Í³ºÏµÄÅäÖÃÎÄ¼ş¼°Ô¤ÉèÖµ (±£´æÔÚ plugcfg Ä¿Â¼£¬±£Ö¤½Å±¾Ä¿Â¼¸É¾»ÎŞÔÓÎï)
+    local iniPath = (getDir #plugcfg) + "\\ÖÇÄÜÁ¢Ãæ×ÛºÏ¹¤¾ß.ini"
     
     local p1_val_ext = 120.0
     local p2_val_ext = 240.0
@@ -88,13 +88,13 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     local p2_val_off = 240.0
     local last_val_off = 0.0
 
-    -- å…±äº«çš„é¢„è®¾ç¼–è¾‘ä¸´æ—¶å˜é‡
+    -- ¹²ÏíµÄÔ¤Éè±à¼­ÁÙÊ±±äÁ¿
     local edit_btn = undefined
     local edit_var = ""
     local edit_val = 0.0
 
     -- ==========================================
-    -- é…ç½®ç®¡ç†
+    -- ÅäÖÃ¹ÜÀí
     -- ==========================================
     fn loadSettings = (
         if doesFileExist iniPath then (
@@ -106,6 +106,8 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             p2_val_off = (getINISetting iniPath "OffsetPresets" "Preset2") as float
             last_val_off = (getINISetting iniPath "OffsetPresets" "LastValue") as float
             
+            local ns = getINISetting iniPath "ExtrudeSettings" "NewSegment"
+            if ns != "" do chk_new_segment.checked = (ns == "true")
         ) else (
             setINISetting iniPath "ExtrudePresets" "Preset1" "120.0"
             setINISetting iniPath "ExtrudePresets" "Preset2" "240.0"
@@ -115,6 +117,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             setINISetting iniPath "OffsetPresets" "Preset2" "240.0"
             setINISetting iniPath "OffsetPresets" "LastValue" "0.0"
             
+            setINISetting iniPath "ExtrudeSettings" "NewSegment" "false"
         )
     )
     
@@ -127,9 +130,10 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         setINISetting iniPath "OffsetPresets" "Preset2" (p2_val_off as string)
         setINISetting iniPath "OffsetPresets" "LastValue" (last_val_off as string)
         
+        setINISetting iniPath "ExtrudeSettings" "NewSegment" (if chk_new_segment.checked then "true" else "false")
     )
 
-    -- æŒ¤å‡ºåè¾¹ç¼–å·å¯èƒ½å˜åŒ–ï¼Œå› æ­¤åªç”¨æŒ¤å‡ºå‰ä¿å­˜çš„ç«¯ç‚¹å¯»æ‰¾ç”Ÿæˆä¾§é¢ã€‚
+    -- ¼·³öºó±ß±àºÅ¿ÉÄÜ±ä»¯£¬Òò´ËÖ»ÓÃ¼·³öÇ°±£´æµÄ¶ËµãÑ°ÕÒÉú³É²àÃæ¡£
     fn findGeneratedSideFace node generatedFaces oldV1 oldV2 = (
         local result = undefined
         for faceID in generatedFaces do (
@@ -153,7 +157,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             )
         )
 
-        -- é›¶è·ç¦»æŒ¤å‡ºæ—¶æŒ‰ä½ç½®ä½œå…œåº•ï¼Œä¸¤ä¸ªå¯¹åº”ç‚¹é‡åˆï¼Œå¦ä¸€ç«¯ä»ç›¸éš”ä¸€æ¡è¾¹é•¿ã€‚
+        -- Áã¾àÀë¼·³öÊ±°´Î»ÖÃ×÷¶µµ×£¬Á½¸ö¶ÔÓ¦µãÖØºÏ£¬ÁíÒ»¶ËÈÔÏà¸ôÒ»Ìõ±ß³¤¡£
         if result == undefined do (
             local oldPos = polyOp.getVert node oldVert
             local minDistance = 1e9
@@ -200,9 +204,50 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         true
     )
 
+    -- ³¤Õ­Ìõ´ø£¨´°Ì¨Ê¯¡¢Ñ¹¶¥¡¢Ïß½Å£©²»Ó¦À­³¶Õû¿éÏàÁÚÇ½Ãæ¡£
+    -- Í¬Ê±±£»¤Ãæ»ıÔ¶´óÓÚÑ¡ÔñÃæµÄ²àÇ½£¬±ÜÃâÉú³É¿çÇ½³¤Èı½ÇÃæ¡£
+    fn isNarrowTrimSelection node faceSet = (
+        if faceSet == undefined or faceSet.numberset != 1 do return false
+
+        local selectedFace = (faceSet as array)[1]
+        local selectedBits = #{}
+        selectedBits[selectedFace] = true
+        local faceVerts = polyOp.getFaceVerts node selectedFace
+        if faceVerts.count < 3 do return false
+
+        local minEdge = 1e9
+        local maxEdge = 0.0
+        for i = 1 to faceVerts.count do (
+            local nextIndex = if i == faceVerts.count then 1 else i + 1
+            local edgeLength = distance (polyOp.getVert node faceVerts[i]) (polyOp.getVert node faceVerts[nextIndex])
+            if edgeLength > 0.0001 do (
+                if edgeLength < minEdge do minEdge = edgeLength
+                if edgeLength > maxEdge do maxEdge = edgeLength
+            )
+        )
+        if minEdge < 1e8 and (maxEdge / minEdge) >= 6.0 do return true
+
+        local selectedArea = polyOp.getFaceArea node selectedFace
+        if selectedArea <= 0.0001 do return false
+        local selectedNormal = normalize (polyOp.getFaceNormal node selectedFace)
+
+        for edgeID in (polyOp.getEdgesUsingFace node selectedBits) do (
+            local adjacentFaces = (polyOp.getFacesUsingEdge node edgeID) - selectedBits
+            for adjacentFace in adjacentFaces do (
+                local adjacentNormal = polyOp.getFaceNormal node adjacentFace
+                if (length adjacentNormal) > 0.0001 do (
+                    adjacentNormal = normalize adjacentNormal
+                    if (abs (dot adjacentNormal selectedNormal)) < 0.15 do (
+                        if (polyOp.getFaceArea node adjacentFace) >= (selectedArea * 4.0) do return true
+                    )
+                )
+            )
+        )
+        false
+    )
+
     -- ==========================================
-    -- æ ¸å¿ƒç®—æ³•ï¼šæ™ºèƒ½é¢æ¨æ‹‰ V3.2
-    -- è´Ÿå€¼å‘å†…æ—¶å»¶ä¼¸ç›¸é‚»å¢™é¢ï¼›æ­£å€¼å‘å¤–æ—¶ä¿ç•™ç‹¬ç«‹å°è¾¹ã€‚
+    -- ºËĞÄËã·¨£ºÖÇÄÜÃæÍÆÀ­ V3.1
     -- ==========================================
     fn prepareExtrusion independentSegment:false = (
         targetNode = selection[1]
@@ -211,7 +256,8 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         baseFaces = polyOp.getFaceSelection targetNode
         if baseFaces.isEmpty do return false
 
-        local useIndependentSegment = independentSegment
+        local autoIndependentSegment = isNarrowTrimSelection targetNode baseFaces
+        local useIndependentSegment = chk_new_segment.checked or independentSegment or autoIndependentSegment
 
         extrudeNormal = [0,0,0]
         for faceID in baseFaces do extrudeNormal += polyOp.getFaceNormal targetNode faceID
@@ -256,7 +302,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         local capFaces = #{}
         local sideFaces = #{}
 
-        -- ä¸å‡è®¾é¢ç¼–å·ï¼šå…¨æ–°é¡¶ç‚¹é¢æ˜¯ç§»åŠ¨é¢ï¼Œæ—§/æ–°æ··åˆé¡¶ç‚¹é¢æ˜¯æŒ¤å‡ºä¾§é¢ã€‚
+        -- ²»¼ÙÉèÃæ±àºÅ£ºÈ«ĞÂ¶¥µãÃæÊÇÒÆ¶¯Ãæ£¬¾É/ĞÂ»ìºÏ¶¥µãÃæÊÇ¼·³ö²àÃæ¡£
         for faceID = 1 to numFacesAfter do (
             local faceVerts = polyOp.getVertsUsingFace targetNode #{faceID}
             local faceNewVerts = faceVerts * newVerts
@@ -277,7 +323,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         local stretchPlans = #()
         local facesToDelete = #{}
 
-        -- é¡¶éƒ¨ç­‰ä¸è¿åŠ¨æ–¹å‘å¹³è¡Œçš„é‚»é¢ï¼šæŠŠæ—§è¾¹æ›¿æ¢ä¸ºç§»åŠ¨é¢çš„æ–°è¾¹ã€‚
+        -- ¶¥²¿µÈÓëÔË¶¯·½ÏòÆ½ĞĞµÄÁÚÃæ£º°Ñ¾É±ßÌæ»»ÎªÒÆ¶¯ÃæµÄĞÂ±ß¡£
         for edgeData in stretchEdgeData do (
             local adjacentFace = edgeData[1]
             local oldV1 = edgeData[2]
@@ -348,7 +394,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             facesToDelete += plan[8]
         )
 
-        -- å¼€æ”¾åº•è¾¹åªåˆ é™¤å¯¹åº”ä¾§é¢ï¼Œå·¦å³å…±é¢è¾¹çš„ä¾§é¢ä¿ç•™ä¸ºæ–°å¢è¿æ¥é¢ã€‚
+        -- ¿ª·Åµ×±ßÖ»É¾³ı¶ÔÓ¦²àÃæ£¬×óÓÒ¹²Ãæ±ßµÄ²àÃæ±£ÁôÎªĞÂÔöÁ¬½ÓÃæ¡£
         if (not useIndependentSegment) and (openBoundaryData.count > 0) do (
             for edgeData in openBoundaryData do (
                 local sideFace = findGeneratedSideFace targetNode sideFaces edgeData[1] edgeData[2]
@@ -358,7 +404,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
 
         if not facesToDelete.isEmpty do polyOp.deleteFaces targetNode facesToDelete delIsoVerts:false
 
-        -- é‡å»ºè¢«å»¶ä¼¸çš„é‚»é¢ï¼›è‹¥å¤±è´¥åˆ™æ¢å¤åŸé¢å’ŒåŸç”Ÿè¿æ¥ä¾§é¢ï¼Œé¿å…ç•™ä¸‹ç ´æ´ã€‚
+        -- ÖØ½¨±»ÑÓÉìµÄÁÚÃæ£»ÈôÊ§°ÜÔò»Ö¸´Ô­ÃæºÍÔ­ÉúÁ¬½Ó²àÃæ£¬±ÜÃâÁôÏÂÆÆ¶´¡£
         for plan in stretchPlans do (
             local createResult = createPolygonSafe targetNode plan[3]
             if createResult[1] > 0 then (
@@ -380,12 +426,12 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
 
         baseFaces = capFaces
         polyOp.setFaceSelection targetNode capFaces
-        format "[V3.2] caps=%, sides=%, stretchEdges=%, openEdges=%, independent=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count useIndependentSegment
+        format "[V3.1] caps=%, sides=%, stretchEdges=%, openEdges=%, autoIndependent=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count autoIndependentSegment
         return true
     )
 
     -- ==========================================
-    -- æ™ºèƒ½æ¶ˆé¢å¼€æ´åŠŸèƒ½ (SketchUp çº§å¼€æ´æ ¸å¿ƒ)
+    -- ÖÇÄÜÏûÃæ¿ª¶´¹¦ÄÜ (SketchUp ¼¶¿ª¶´ºËĞÄ)
     -- ==========================================
     fn checkAndCutHoles val = (
         if val >= 0.0 do return false
@@ -408,7 +454,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             for f = 1 to numFaces do (
                 if pf == f do continue
                 local N_f = polyOp.getFaceNormal targetNode f
-                -- èƒŒé¢çš„æ³•çº¿å¿…é¡»ä¸æŒ¤å‡ºæ–¹å‘ç›¸å
+                -- ±³ÃæµÄ·¨Ïß±ØĞëÓë¼·³ö·½ÏòÏà·´
                 if dot N N_f < -0.95 do (
                     local fVerts = polyOp.getFaceVerts targetNode f
                     if fVerts.count > 0 do (
@@ -422,11 +468,11 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                 )
             )
             
-            -- å¦‚æœæ¨æ‹‰é¢ä¸­å¿ƒå’ŒèƒŒé¢åœ¨åŒä¸€ä¸ªå¹³é¢ä¸Šï¼ˆé—´è·æå°ï¼‰
+            -- Èç¹ûÍÆÀ­ÃæÖĞĞÄºÍ±³ÃæÔÚÍ¬Ò»¸öÆ½ÃæÉÏ£¨¼ä¾à¼«Ğ¡£©
             if foundBackFace != undefined and minDist < 0.2 do (
                 local area_pf = polyOp.getFaceArea targetNode pf
                 local area_bf = polyOp.getFaceArea targetNode foundBackFace
-                -- é¢ç§¯å¯¹æ¯”é˜²çº¿ï¼šç¡®ä¿èƒŒé¢ä¸æ˜¯è¶…å¤§å¢™ä½“ï¼ˆé˜²æ•´é¢å¢™è¯¯åˆ ï¼‰
+                -- Ãæ»ı¶Ô±È·ÀÏß£ºÈ·±£±³Ãæ²»ÊÇ³¬´óÇ½Ìå£¨·ÀÕûÃæÇ½ÎóÉ¾£©
                 if area_bf <= area_pf * 1.3 do (
                     append newExtrudedFacesToDelete pf
                     append backFacesToDelete foundBackFace
@@ -435,22 +481,22 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         )
         
         if not backFacesToDelete.isEmpty then (
-            -- æ”¶é›†å°†è¢«åˆ é™¤çš„é¢çš„é¡¶ç‚¹é›†
+            -- ÊÕ¼¯½«±»É¾³ıµÄÃæµÄ¶¥µã¼¯
             local vertsPushed = #{}
             for pf in newExtrudedFacesToDelete do vertsPushed += polyOp.getVertsUsingFace targetNode #{pf}
             local vertsBack = #{}
             for bf in backFacesToDelete do vertsBack += polyOp.getVertsUsingFace targetNode #{bf}
             
-            -- åˆ é™¤é¢
+            -- É¾³ıÃæ
             local allToDelete = newExtrudedFacesToDelete + backFacesToDelete
             polyOp.deleteFaces targetNode allToDelete delIsoVerts:false
             
-            -- ç„Šæ¥æ¥ç¼é¡¶ç‚¹
+            -- º¸½Ó½Ó·ì¶¥µã
             local vertsToWeld = vertsPushed + vertsBack
             targetNode.weldThreshold = 0.2
             polyOp.weldVertsByThreshold targetNode vertsToWeld
             
-            -- å±€éƒ¨æ¸…ç†å­¤ç«‹é¡¶ç‚¹
+            -- ¾Ö²¿ÇåÀí¹ÂÁ¢¶¥µã
             local isoVerts = #{}
             for v in vertsToWeld do (
                 if (polyOp.getFacesUsingVert targetNode v).isEmpty do append isoVerts v
@@ -462,13 +508,12 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         return false
     )
 
-    fn executePushPull val = (
+    fn executePushPull val independentSegment:false = (
         if val != 0.0 do (
-            local useIndependentSegment = val > 0.0
-            undo "æ™ºèƒ½ç«‹é¢æ¨æ‹‰" on (
+            undo "ÖÇÄÜÁ¢ÃæÍÆÀ­" on (
                 local success = false
                 try (
-                    success = prepareExtrusion independentSegment:useIndependentSegment
+                    success = prepareExtrusion independentSegment:independentSegment
                 ) catch (
                     format "Error in prepareExtrusion: %\n" (getCurrentException())
                     success = false
@@ -477,12 +522,12 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                     for i = 1 to extrudeVerts.count do (
                         polyOp.setVert targetNode extrudeVerts[i] (origVertPos[i] + extrudeNormal * val)
                     )
-                    -- æ£€æŸ¥å¼€æ´
+                    -- ¼ì²é¿ª¶´
                     checkAndCutHoles val
                     update targetNode
                     
                     last_val_ext = val
-                    btn_last_ext.text = "ä¸Šæ¬¡:" + (last_val_ext as string)
+                    btn_last_ext.text = "ÉÏ´Î:" + (last_val_ext as string)
                     saveSettings()
                 )
             )
@@ -490,7 +535,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     )
 
     -- ==========================================
-    -- æ ¸å¿ƒç®—æ³•ï¼šPOLYçº¿åç§»
+    -- ºËĞÄËã·¨£ºPOLYÏßÆ«ÒÆ
     -- ==========================================
     fn isPositiveDirection P = (
         if abs P.z > 0.001 then (
@@ -507,13 +552,13 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
         
         targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly do (
-            messageBox "è¯·é€‰æ‹©ä¸€ä¸ª Editable Poly å¯¹è±¡ï¼" title:"æç¤º"
+            messageBox "ÇëÑ¡ÔñÒ»¸ö Editable Poly ¶ÔÏó£¡" title:"ÌáÊ¾"
             return false
         )
         
         local edgeSel = polyOp.getEdgeSelection targetNode
         if edgeSel.isEmpty do (
-            messageBox "è¯·å…ˆé€‰æ‹©éœ€è¦åç§»çš„è¾¹çº¿ï¼" title:"æç¤º"
+            messageBox "ÇëÏÈÑ¡ÔñĞèÒªÆ«ÒÆµÄ±ßÏß£¡" title:"ÌáÊ¾"
             return false
         )
         
@@ -618,11 +663,11 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     
     fn executeOffset val = (
         if val != 0.0 do (
-            undo "POLYçº¿åç§»" on (
+            undo "POLYÏßÆ«ÒÆ" on (
                 local success = doOffset val
                 if success do (
                     last_val_off = val
-                    btn_last_off.text = "ä¸Šæ¬¡:" + (last_val_off as string)
+                    btn_last_off.text = "ÉÏ´Î:" + (last_val_off as string)
                     saveSettings()
                 )
             )
@@ -630,83 +675,49 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     )
 
     -- ==========================================
-    -- é¢æ¿ç”Ÿå‘½å‘¨æœŸåŠäº‹ä»¶å¤„ç†
+    -- Ãæ°åÉúÃüÖÜÆÚ¼°ÊÂ¼ş´¦Àí
     -- ==========================================
     on WH_SmartExtrude_Rollout open do (
         loadSettings()
-        -- å¡«å……é¢æ¨æ‹‰ UI
+        -- Ìî³äÃæÍÆÀ­ UI
         btn_p1_ext.text = p1_val_ext as string
         btn_p2_ext.text = p2_val_ext as string
-        btn_last_ext.text = "ä¸Šæ¬¡:" + (last_val_ext as string)
-        -- å¡«å……çº¿åç§» UI
+        btn_last_ext.text = "ÉÏ´Î:" + (last_val_ext as string)
+        -- Ìî³äÏßÆ«ÒÆ UI
         btn_p1_off.text = p1_val_off as string
         btn_p2_off.text = p2_val_off as string
-        btn_last_off.text = "ä¸Šæ¬¡:" + (last_val_off as string)
+        btn_last_off.text = "ÉÏ´Î:" + (last_val_off as string)
     )
 
+    on chk_new_segment changed state do saveSettings()
+
     -- ------------------------------------------
-    -- æ™ºèƒ½é¢æ¨æ‹‰æ‹–åŠ¨äº‹ä»¶ç»„
+    -- ÖÇÄÜÃæÍÆÀ­ÍÏ¶¯ÊÂ¼ş×é
     -- ------------------------------------------
     on spn_dist_ext buttondown do (
-        targetNode = selection[1]
-        hasPrepared_ext = false
-        dragUsesIndependent_ext = false
-        if targetNode != undefined and classOf targetNode == Editable_Poly and not (polyOp.getFaceSelection targetNode).isEmpty then (
-            theHold.SuperBegin()
+        theHold.SuperBegin()
+        local success = false
+        undo "ÖÇÄÜÁ¢ÃæÍÆÀ­" on (
+            try (
+                success = prepareExtrusion()
+            ) catch (
+                format "Error in prepareExtrusion: %\n" (getCurrentException())
+                success = false
+            )
+        )
+        if success then (
             isDragging_ext = true
         ) else (
+            theHold.SuperCancel()
             isDragging_ext = false
         )
     )
 
     on spn_dist_ext changed val do (
         if ignoreChange_ext do return ()
-        if not isDragging_ext do return ()
-
-        if val == 0.0 do (
-            if hasPrepared_ext and extrudeVerts.count > 0 and targetNode != undefined do (
-                try (
-                    for i = 1 to extrudeVerts.count do (
-                        polyOp.setVert targetNode extrudeVerts[i] origVertPos[i]
-                    )
-                    update targetNode
-                ) catch ()
-            )
-            return ()
-        )
-
-        local useIndependentSegment = val > 0.0
-        if hasPrepared_ext and (dragUsesIndependent_ext != useIndependentSegment) do (
-            theHold.SuperCancel()
-            theHold.SuperBegin()
-            hasPrepared_ext = false
-        )
-
-        if not hasPrepared_ext do (
-            local success = false
-            undo "æ™ºèƒ½ç«‹é¢æ¨æ‹‰" on (
-                try (
-                    success = prepareExtrusion independentSegment:useIndependentSegment
-                ) catch (
-                    format "Error in prepareExtrusion: %\n" (getCurrentException())
-                    success = false
-                )
-            )
-            if success then (
-                hasPrepared_ext = true
-                dragUsesIndependent_ext = useIndependentSegment
-            ) else (
-                theHold.SuperCancel()
-                isDragging_ext = false
-                hasPrepared_ext = false
-                ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
-                return ()
-            )
-        )
-
-        if extrudeVerts.count > 0 and targetNode != undefined do (
+        if isDragging_ext and extrudeVerts.count > 0 and targetNode != undefined do (
             try (
-                undo "æ™ºèƒ½ç«‹é¢æ¨æ‹‰" on (
+                undo "ÖÇÄÜÁ¢ÃæÍÆÀ­" on (
                     for i = 1 to extrudeVerts.count do (
                         polyOp.setVert targetNode extrudeVerts[i] (origVertPos[i] + extrudeNormal * val)
                     )
@@ -716,8 +727,6 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                 format "Error in spn_dist_ext changed: %\n" (getCurrentException())
                 theHold.SuperCancel()
                 isDragging_ext = false
-                hasPrepared_ext = false
-                ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
             )
         )
     )
@@ -725,21 +734,21 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     on spn_dist_ext buttonup do (
         if isDragging_ext do (
             local finalVal = spn_dist_ext.value
-            if hasPrepared_ext and finalVal != 0.0 then (
+            if finalVal != 0.0 then (
                 try (
-                    undo "æ™ºèƒ½ç«‹é¢æ¨æ‹‰" on (
-                        -- å†™å…¥æœ€ç»ˆä½ç½®
+                    undo "ÖÇÄÜÁ¢ÃæÍÆÀ­" on (
+                        -- Ğ´Èë×îÖÕÎ»ÖÃ
                         for i = 1 to extrudeVerts.count do (
                             polyOp.setVert targetNode extrudeVerts[i] (origVertPos[i] + extrudeNormal * finalVal)
                         )
-                        -- æ£€æŸ¥å¼€æ´
+                        -- ¼ì²é¿ª¶´
                         checkAndCutHoles finalVal
                         update targetNode
                     )
-                    theHold.SuperAccept "æ™ºèƒ½ç«‹é¢æ¨æ‹‰"
+                    theHold.SuperAccept "ÖÇÄÜÁ¢ÃæÍÆÀ­"
                     
                     last_val_ext = finalVal
-                    btn_last_ext.text = "ä¸Šæ¬¡:" + (last_val_ext as string)
+                    btn_last_ext.text = "ÉÏ´Î:" + (last_val_ext as string)
                     saveSettings()
                 ) catch (
                     format "Error in spn_dist_ext buttonup: %\n" (getCurrentException())
@@ -749,8 +758,6 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                 theHold.SuperCancel()
             )
             isDragging_ext = false
-            hasPrepared_ext = false
-            dragUsesIndependent_ext = false
             ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
         )
     )
@@ -760,7 +767,27 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
             local val = spn_dist_ext.value
             if val != 0 do (
                 try (
-                    executePushPull val
+                    undo "ÖÇÄÜÁ¢ÃæÍÆÀ­" on (
+                        local success = false
+                        try (
+                            success = prepareExtrusion()
+                        ) catch (
+                            format "Error in prepareExtrusion: %\n" (getCurrentException())
+                            success = false
+                        )
+                        if success do (
+                            for i = 1 to extrudeVerts.count do (
+                                polyOp.setVert targetNode extrudeVerts[i] (origVertPos[i] + extrudeNormal * val)
+                            )
+                            -- ¼ì²é¿ª¶´
+                            checkAndCutHoles val
+                            update targetNode
+                            
+                            last_val_ext = val
+                            btn_last_ext.text = "ÉÏ´Î:" + (last_val_ext as string)
+                            saveSettings()
+                        )
+                    )
                 ) catch (
                     format "Error in spn_dist_ext entered: %\n" (getCurrentException())
                 )
@@ -770,53 +797,53 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     )
 
     -- ------------------------------------------
-    -- å¯¹é½åˆ°ç‚¹æŒ‰é’®é€»è¾‘
+    -- ¶ÔÆëµ½µã°´Å¥Âß¼­
     -- ------------------------------------------
     on btn_align_ext pressed do (
         targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly do (
-            messageBox "è¯·å…ˆé€‰æ‹©ä¸€ä¸ª Editable Poly å¯¹è±¡ï¼" title:"æç¤º"
+            messageBox "ÇëÏÈÑ¡ÔñÒ»¸ö Editable Poly ¶ÔÏó£¡" title:"ÌáÊ¾"
             return ()
         )
         local baseFacesSel = polyOp.getFaceSelection targetNode
         if baseFacesSel.isEmpty do (
-            messageBox "è¯·åœ¨å¤šè¾¹å½¢çš„é¢å­å±‚çº§ä¸‹é€‰æ‹©è¦æ¨æ‹‰çš„é¢ï¼" title:"æç¤º"
+            messageBox "ÇëÔÚ¶à±ßĞÎµÄÃæ×Ó²ã¼¶ÏÂÑ¡ÔñÒªÍÆÀ­µÄÃæ£¡" title:"ÌáÊ¾"
             return ()
         )
         
-        -- è°ƒç”¨ Max æ‹¾å–ç‚¹
-        local p = pickPoint snap:#3D message:"è¯·åœ¨è§†å£ä¸­ç‚¹å‡»ä¸€ä¸ªå‚è€ƒç‚¹ä»¥å¯¹é½æ¨æ‹‰è·ç¦»..."
+        -- µ÷ÓÃ Max Ê°È¡µã
+        local p = pickPoint snap:#3D message:"ÇëÔÚÊÓ¿ÚÖĞµã»÷Ò»¸ö²Î¿¼µãÒÔ¶ÔÆëÍÆÀ­¾àÀë..."
         if classOf p == Point3 do (
-            -- 1. è·å–é€‰ä¸­çš„é¢ä¸­å¿ƒï¼ˆæ˜¾å¼æŒ‡å®š node å‚æ•°ä»¥è·å–ä¸–ç•Œåæ ‡ï¼‰
+            -- 1. »ñÈ¡Ñ¡ÖĞµÄÃæÖĞĞÄ£¨ÏÔÊ½Ö¸¶¨ node ²ÎÊıÒÔ»ñÈ¡ÊÀ½ç×ø±ê£©
             local C_world = [0,0,0]
             for f in baseFacesSel do C_world += polyOp.getFaceCenter targetNode f node:targetNode
             C_world = C_world / baseFacesSel.numberset
             
-            -- 2. è·å–æ³•çº¿ï¼ˆä» baseObject è·å–ä»¥ä¿è¯ä¸ºå±€éƒ¨æ³•çº¿ï¼‰å¹¶è½¬ä¸ºä¸–ç•Œæ–¹å‘
+            -- 2. »ñÈ¡·¨Ïß£¨´Ó baseObject »ñÈ¡ÒÔ±£Ö¤Îª¾Ö²¿·¨Ïß£©²¢×ªÎªÊÀ½ç·½Ïò
             local localNormal = [0,0,0]
             for f in baseFacesSel do localNormal += polyOp.getFaceNormal targetNode.baseObject f
             localNormal = normalize localNormal
             local worldNormal = normalize (localNormal * targetNode.objectTransform.rotation)
             
-            -- 3. è®¡ç®—ä¸–ç•Œç©ºé—´ä¸‹çš„ç²¾å‡†æŠ•å½±ä½ç§»è·ç¦»
+            -- 3. ¼ÆËãÊÀ½ç¿Õ¼äÏÂµÄ¾«×¼Í¶Ó°Î»ÒÆ¾àÀë
             local val_world = dot (p - C_world) worldNormal
             
-            -- 4. è§£å†³ç¼©æ”¾/å¯¹é½åå·®ï¼šè®¡ç®—å±€éƒ¨æ³•çº¿é•¿åº¦ 1.0 åœ¨ä¸–ç•Œç©ºé—´å˜æ¢åçš„å®é™…é•¿åº¦æ¯”ä¾‹ factor
+            -- 4. ½â¾öËõ·Å/¶ÔÆëÆ«²î£º¼ÆËã¾Ö²¿·¨Ïß³¤¶È 1.0 ÔÚÊÀ½ç¿Õ¼ä±ä»»ºóµÄÊµ¼Ê³¤¶È±ÈÀı factor
             local p0_world = [0,0,0] * targetNode.objectTransform
             local p1_world = localNormal * targetNode.objectTransform
             local factor = distance p0_world p1_world
             
             if factor > 0.0001 then (
                 local val = val_world / factor
-                executePushPull val
+                executePushPull val independentSegment:true
             ) else (
-                executePushPull val_world
+                executePushPull val_world independentSegment:true
             )
         )
     )
 
     -- ------------------------------------------
-    -- POLYçº¿åç§»æ‹–åŠ¨äº‹ä»¶ç»„
+    -- POLYÏßÆ«ÒÆÍÏ¶¯ÊÂ¼ş×é
     -- ------------------------------------------
     on spn_dist_off buttondown do (
         theHold.SuperBegin()
@@ -839,7 +866,7 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                     theHold.SuperCancel()
                     theHold.SuperBegin()
                 )
-                undo "POLYçº¿åç§»" on (
+                undo "POLYÏßÆ«ÒÆ" on (
                     polyOp.setEdgeSelection targetNode origEdgeSel
                     local success = doOffset val
                     if success then (
@@ -866,11 +893,11 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
                     if hasRunInDrag_off do theHold.SuperCancel()
                 ) else (
                     if hasRunInDrag_off then (
-                        theHold.SuperAccept "POLYçº¿åç§»"
+                        theHold.SuperAccept "POLYÏßÆ«ÒÆ"
                         local finalVal = spn_dist_off.value
                         if finalVal != 0.0 do (
                             last_val_off = finalVal
-                            btn_last_off.text = "ä¸Šæ¬¡:" + (last_val_off as string)
+                            btn_last_off.text = "ÉÏ´Î:" + (last_val_off as string)
                             saveSettings()
                         )
                     ) else (
@@ -934,23 +961,23 @@ rollout WH_SmartExtrude_Rollout "æ™ºèƒ½ç«‹é¢ç»¼åˆå·¥å…·  V3.2"
     on btn_last_off pressed do executeOffset last_val_off
 
     -- ------------------------------------------
-    -- æŒ‰é’®åŠäº‹ä»¶å®šä¹‰åœ¨æœ€åï¼Œä»¥é¿å…å ç”¨è‡ªåŠ¨å¸ƒå±€è¡Œ
+    -- °´Å¥¼°ÊÂ¼ş¶¨ÒåÔÚ×îºó£¬ÒÔ±ÜÃâÕ¼ÓÃ×Ô¶¯²¼¾ÖĞĞ
     -- ------------------------------------------
-    button btn_help "?" width:16 height:16 pos:[256, 5] tooltip:"ä½¿ç”¨è¯´æ˜"
+    button btn_help "?" width:16 height:16 pos:[256, 5] tooltip:"Ê¹ÓÃËµÃ÷"
 
     on btn_help pressed do (
-        local helpText = "ã€æ™ºèƒ½é¢æ¨æ‹‰ã€‘\n" \
-                       + "1. åœ¨é¢å±‚çº§ä¸‹ï¼Œé€‰æ‹©éœ€è¦æ¨æ‹‰çš„å¢™ä½“æˆ–çª—æ´é¢ã€‚\n" \
-                       + "2. ã€ç‰¹è‰² - æ™ºèƒ½å¼€æ´ã€‘ï¼šå‘å†…æ¨è‡³å¢™ä½“èƒŒé¢æ·±åº¦ï¼ˆèƒŒé¢æœ‰ç›¸åŒ¹é…å¤šè¾¹å½¢ï¼‰ï¼Œé‡Šæ”¾é¼ æ ‡ä¼šè‡ªåŠ¨åˆ é¢å¹¶ç¼åˆç„Šæ¥ï¼Œå®ç°ç©¿é€å¼€æ´ï¼\n" \
-                       + "3. ã€å‘å†…æ¨ã€‘ï¼šè¾“å…¥è´Ÿå€¼æ—¶ï¼Œä½¿ç”¨è”åŠ¨ç›¸é‚»å¢™é¢çš„æ¨æ‹‰æ–¹æ¡ˆã€‚\n" \
-                       + "4. ã€å‘å¤–æ‹‰ã€‘ï¼šè¾“å…¥æ­£å€¼æ—¶ï¼Œä½¿ç”¨ç‹¬ç«‹å°è¾¹æ–¹æ¡ˆï¼Œé€‚åˆçª—å°çŸ³å’Œçº¿è„šã€‚\n" \
-                       + "5. ã€ç‰¹è‰² - å¯¹é½åˆ°ç‚¹ã€‘ï¼šç‚¹å‡»ååœ¨è§†å£ä¸­æ•æ‰ä»»æ„ç‰©ä½“é¡¶ç‚¹ï¼Œå¹¶æŒ‰å®é™…å‘å†…æˆ–å‘å¤–æ–¹å‘ä½¿ç”¨å¯¹åº”æ–¹æ¡ˆã€‚\n\n" \
-                       + "ã€POLYçº¿åç§»ã€‘\n" \
-                       + "- åœ¨è¾¹å±‚çº§é€‰æ‹©è¾¹çº¿ï¼Œæ‹–åŠ¨åç§»æˆ–ä¸€é”®åº”ç”¨å¸¸ç”¨é¢„è®¾ï¼Œåªä¿ç•™å•å‘æ™ºèƒ½åç§»ã€‚\n\n" \
-                       + "ã€å…¬å…±æ“ä½œã€‘\n" \
-                       + "- é¢„è®¾æŒ‰é’®ï¼šå·¦é”®ç›´æ¥è¿è¡Œï¼Œå³é”®è‡ªå®šä¹‰æ•°å€¼å¹¶ä¿å­˜ã€‚\n" \
-                       + "- æ’¤é”€æ”¯æŒï¼šæ”¯æŒ Ctrl+Z æ’¤é”€ï¼ˆå¼€æ´åŠç„Šæ¥ä¼šè¢«ä½œä¸ºå•æ­¥å†å²æ’¤é”€æ¢å¤ï¼‰ã€‚"
-        messageBox helpText title:"ä½¿ç”¨è¯´æ˜"
+        local helpText = "¡¾ÖÇÄÜÃæÍÆÀ­¡¿\n" \
+                       + "1. ÔÚÃæ²ã¼¶ÏÂ£¬Ñ¡ÔñĞèÒªÍÆÀ­µÄÇ½Ìå»ò´°¶´Ãæ¡£\n" \
+                       + "2. ¡¾ÌØÉ« - ÖÇÄÜ¿ª¶´¡¿£ºÏòÄÚÍÆÖÁÇ½Ìå±³ÃæÉî¶È£¨±³ÃæÓĞÏàÆ¥Åä¶à±ßĞÎ£©£¬ÊÍ·ÅÊó±ê»á×Ô¶¯É¾Ãæ²¢·ìºÏº¸½Ó£¬ÊµÏÖ´©Í¸¿ª¶´£¡\n" \
+                       + "3. ¡¾ÌØÉ« - ¹²Ãæ¹ıÂË¡¿£ºÆ½Ö±´óÇ½ÃæÉÏÍÆÀ­¾Ö²¿ÃæÊ±£¬ÖÜÎ§¹²ÃæÇ½Ìå²»»á±äĞÎÀ­Éì£¬×Ô¶¯Éú³ÉĞÂ±ß·Ö¶Î£¬Óë SU ÌåÑéÒ»ÖÂ¡£\n" \
+                       + "4. ¡¾´´½¨ĞÂ·Ö¶Î¡¿£º¹´Ñ¡ºóÊ¼ÖÕ¶ÀÁ¢·â±ß£»³¤Õ­Ìõ´øºÍÏàÁÚ³¬´óÇ½Ãæ»á×Ô¶¯Ê¹ÓÃ¶ÀÁ¢·â±ß¡£\n" \
+                       + "5. ¡¾ÌØÉ« - ¶ÔÆëµ½µã¡¿£ºµã»÷ºóÔÚÊÓ¿ÚÖĞ²¶×½ÈÎÒâÎïÌå¶¥µã£¬²¢ÒÔ¶ÀÁ¢·â±ß·½Ê½¶ÔÆë£¬ÊÊºÏ´°Ì¨Ê¯µÈÌù±ß¹¹¼ş¡£\n\n" \
+                       + "¡¾POLYÏßÆ«ÒÆ¡¿\n" \
+                       + "- ÔÚ±ß²ã¼¶Ñ¡Ôñ±ßÏß£¬ÍÏ¶¯Æ«ÒÆ»òÒ»¼üÓ¦ÓÃ³£ÓÃÔ¤Éè£¬Ö»±£Áôµ¥ÏòÖÇÄÜÆ«ÒÆ¡£\n\n" \
+                       + "¡¾¹«¹²²Ù×÷¡¿\n" \
+                       + "- Ô¤Éè°´Å¥£º×ó¼üÖ±½ÓÔËĞĞ£¬ÓÒ¼ü×Ô¶¨ÒåÊıÖµ²¢±£´æ¡£\n" \
+                       + "- ³·ÏúÖ§³Ö£ºÖ§³Ö Ctrl+Z ³·Ïú£¨¿ª¶´¼°º¸½Ó»á±»×÷Îªµ¥²½ÀúÊ·³·Ïú»Ö¸´£©¡£"
+        messageBox helpText title:"Ê¹ÓÃËµÃ÷"
     )
 )
 

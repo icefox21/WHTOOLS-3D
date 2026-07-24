@@ -681,7 +681,7 @@ rollout WH_GridEdit_Rollout "网格编辑器" width:300 height:340 (
     on WH_GridEdit_Rollout open do ( pvCanvas.BackColor = (dotNetClass "System.Drawing.Color").FromArgb 40 40 45; refreshPreview() )
 )
 
-rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
+rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
 (
     -- Rollout Local Variables
     local presets = #()
@@ -692,7 +692,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
     local openingDidModify = false
     
     -- Forward declarations of functions
-    local makeWindow, applyPreset, partitionPoly, sliceAndCreateOpening, refreshListView, layoutPresetItems, loadPresets, saveAllPresetsToINI, applyMainUILayout
+    local makeWindow, applyPreset, partitionPoly, sliceAndCreateOpening, refreshListView, layoutPresetItems, loadPresets, saveAllPresetsToINI, applyMainUILayout, updateHeightEnableState
     local pchPack, pchUnpack, pchArrayToString, pchStringToFloatArray, pchReadScriptLines, pchFindEmbeddedLine
     local pchGetEmbeddedSetting, pchGetEmbeddedPresetCount, pchLoadEmbeddedPreset, pchLoadLegacyPresets
     local pchEmbeddedLooksDefault, pchPresetToGridEdit, pchWriteEmbeddedData
@@ -996,22 +996,16 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
         if windowWidthStr == "" then windowWidthStr = "430"
         if windowHeightStr == "" then windowHeightStr = "510"
         
-        try (
-            outerSizeStr = spnOuterSize.value as string
-            innerSizeStr = spnInnerSize.value as string
-            frameDepthStr = spnFrameThick.value as string
-            glassDepthStr = spnGlassThick.value as string
-            if chkHeightEnable.checked then (
-                heightEnabledStr = "true"
-            ) else (
-                heightEnabledStr = "false"
-            )
-            sillSizeStr = spnSill.value as string
-            depthSizeStr = spnDepth.value as string
-            winHeightSizeStr = spnWinHeight.value as string
-            windowWidthStr = UI_WinMakerToolPlus.width as string
-            windowHeightStr = UI_WinMakerToolPlus.height as string
-        ) catch ()
+        try ( if spnOuterSize != undefined do outerSizeStr = spnOuterSize.value as string ) catch ()
+        try ( if spnInnerSize != undefined do innerSizeStr = spnInnerSize.value as string ) catch ()
+        try ( if spnFrameThick != undefined do frameDepthStr = spnFrameThick.value as string ) catch ()
+        try ( if spnGlassThick != undefined do glassDepthStr = spnGlassThick.value as string ) catch ()
+        try ( if chkHeightEnable != undefined do heightEnabledStr = (if chkHeightEnable.checked then "true" else "false") ) catch ()
+        try ( if spnSill != undefined do sillSizeStr = spnSill.value as string ) catch ()
+        try ( if spnDepth != undefined do depthSizeStr = spnDepth.value as string ) catch ()
+        try ( if spnWinHeight != undefined do winHeightSizeStr = spnWinHeight.value as string ) catch ()
+        try ( if UI_WinMakerToolPlus != undefined do windowWidthStr = UI_WinMakerToolPlus.width as string ) catch ()
+        try ( if UI_WinMakerToolPlus != undefined do windowHeightStr = UI_WinMakerToolPlus.height as string ) catch ()
         
         local settingLine = "--Settings"
         settingLine += "|OuterSize=" + outerSizeStr
@@ -1844,52 +1838,81 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
         CenterPivot winPlaneObj
         winPlaneObj
     )
-        fn createWindowPlaneFromFace obj f = (
+        fn createWindowPlaneFromFace obj f h_bottom:undefined h_top:undefined depth_pull:0.0 = (
+            if obj == undefined or f == undefined or f < 1 or f > (polyop.getNumFaces obj) do return undefined
             local verts = polyop.getFaceVerts obj f
             if verts.count < 3 do return undefined
-            local winPlane = box length:1 width:1 height:1
-            convertTo winPlane Editable_Poly
-            polyop.deleteFaces winPlane #{1..(polyop.getNumFaces winPlane)}
-            winPlane.name = uniqueName (obj.name + "_WindowPlane_")
-            winPlane.transform = obj.transform
-            local newVerts = #()
-            if verts.count == 4 then (
-                for v in verts do (
-                    append newVerts (polyop.createVert winPlane (polyop.getVert obj v))
-                )
+            
+            local pts = for v in verts collect (in coordsys world (polyop.getVert obj v))
+            local n = normalize (in coordsys world (polyop.getFaceNormal obj f))
+            
+            local vDir = [0,0,1] - (n * (dot [0,0,1] n))
+            if (length vDir) < 0.001 do vDir = [1,0,0] - (n * (dot [1,0,0] n))
+            if (length vDir) < 0.001 do vDir = [0,1,0] - (n * (dot [0,1,0] n))
+            vDir = normalize vDir
+            local hDir = normalize (cross vDir n)
+            
+            local center = [0,0,0]
+            for p in pts do center += p
+            center = center / pts.count
+            
+            local minH = 1e9, maxH = -1e9
+            local minV = 1e9, maxV = -1e9
+            local z_min = 1e9, z_max = -1e9
+            
+            for p in pts do (
+                local d = p - center
+                local hp = dot d hDir
+                local vp = dot d vDir
+                if hp < minH do minH = hp
+                if hp > maxH do maxH = hp
+                if vp < minV do minV = vp
+                if vp > maxV do maxV = vp
+                if p.z < z_min do z_min = p.z
+                if p.z > z_max do z_max = p.z
+            )
+            
+            local corners = #()
+            if h_bottom != undefined and h_top != undefined then (
+                local offsetVec = -n * depth_pull
+                local d_plane = dot center n
+                local p1 = (hDir * minH) + (n * d_plane) + [0, 0, h_bottom] + offsetVec
+                local p2 = (hDir * maxH) + (n * d_plane) + [0, 0, h_bottom] + offsetVec
+                local p3 = (hDir * maxH) + (n * d_plane) + [0, 0, h_top] + offsetVec
+                local p4 = (hDir * minH) + (n * d_plane) + [0, 0, h_top] + offsetVec
+                corners = #(p1, p2, p3, p4)
+            ) else if chkHeightEnable.checked then (
+                local calc_bottom = z_min + spnSill.value
+                local calc_top = calc_bottom + spnWinHeight.value
+                if calc_bottom < z_min + 1.0 do calc_bottom = z_min + 1.0
+                if calc_bottom > z_max - 20.0 do calc_bottom = z_max - 20.0
+                if calc_top < calc_bottom + 10.0 do calc_top = calc_bottom + 10.0
+                if calc_top > z_max do calc_top = z_max
+                
+                local offsetVec = -n * spnDepth.value
+                local d_plane = dot center n
+                local p1 = (hDir * minH) + (n * d_plane) + [0, 0, calc_bottom] + offsetVec
+                local p2 = (hDir * maxH) + (n * d_plane) + [0, 0, calc_bottom] + offsetVec
+                local p3 = (hDir * maxH) + (n * d_plane) + [0, 0, calc_top] + offsetVec
+                local p4 = (hDir * minH) + (n * d_plane) + [0, 0, calc_top] + offsetVec
+                corners = #(p1, p2, p3, p4)
             ) else (
-                local pts = #()
-                for v in verts do append pts (polyop.getVert obj v)
-                local n = normalize (polyop.getFaceNormal obj f)
-                local vDir = [0,0,1] - (n * (dot [0,0,1] n))
-                if (length vDir) < 0.001 do vDir = [1,0,0] - (n * (dot [1,0,0] n))
-                if (length vDir) < 0.001 do vDir = [0,1,0] - (n * (dot [0,1,0] n))
-                vDir = normalize vDir
-                local hDir = normalize (cross vDir n)
-                local center = [0,0,0]
-                for p in pts do center += p
-                center = center / pts.count
-                local minH = 1e9
-                local maxH = -1e9
-                local minV = 1e9
-                local maxV = -1e9
-                for p in pts do (
-                    local d = p - center
-                    local hp = dot d hDir
-                    local vp = dot d vDir
-                    if hp < minH do minH = hp
-                    if hp > maxH do maxH = hp
-                    if vp < minV do minV = vp
-                    if vp > maxV do maxV = vp
-                )
-                local corners = #(
+                corners = #(
                     center + hDir * minH + vDir * minV,
                     center + hDir * maxH + vDir * minV,
                     center + hDir * maxH + vDir * maxV,
                     center + hDir * minH + vDir * maxV
                 )
-                for p in corners do append newVerts (polyop.createVert winPlane p)
             )
+            
+            local winPlane = Plane length:1 width:1 lengthsegs:1 widthsegs:1
+            convertTo winPlane Editable_Poly
+            polyop.deleteFaces winPlane #{1..(polyop.getNumFaces winPlane)}
+            winPlane.name = uniqueName (obj.name + "_WindowPlane_")
+            winPlane.transform = matrix3 1
+            
+            local newVerts = #()
+            for p in corners do append newVerts (polyop.createVert winPlane p)
             if newVerts.count == 4 then (
                 polyop.createPolygon winPlane newVerts
                 CenterPivot winPlane
@@ -1915,57 +1938,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
             
             local faceSel = (polyop.getFaceSelection obj) as array
             logDebug ("选中面数: " + faceSel.count as string)
-            if faceSel.count == 2 then (
-                local f1 = faceSel[1]
-                local f2 = faceSel[2]
-                
-                local n1 = polyop.getFaceNormal obj f1
-                local n2 = polyop.getFaceNormal obj f2
-                if (dot n1 n2) > -0.5 then (
-                    messageBox "请选择两个方向相反的墙面！" title:"提示"
-                    return()
-                )
-                
-                local verts = polyop.getFaceVerts obj f1
-                local z_min = 1e9
-                local z_max = -1e9
-                for v in verts do (
-                    local pos = (in coordsys world (polyop.getVert obj v))
-                    if pos.z < z_min do z_min = pos.z
-                    if pos.z > z_max do z_max = pos.z
-                )
-                
-                local h_bottom = z_min
-                if chkHeightEnable.checked do h_bottom += spnSill.value
-                
-                local h_top = z_max
-                if chkHeightEnable.checked do h_top = h_bottom + spnWinHeight.value
-                
-                local faceH = z_max - z_min
-                if h_bottom < z_min + 1.0 do h_bottom = z_min + 1.0
-                if h_bottom > z_max - 20.0 do h_bottom = z_max - 20.0
-                
-                if h_top < h_bottom + 10.0 do h_top = h_bottom + 10.0
-                if h_top > z_max do h_top = z_max
-                
-                local depth_pull = 0.0
-                if chkHeightEnable.checked do depth_pull = spnDepth.value
-                
-                local winPlane = undefined
-                undo "智能开洞片窗" on (
-                    winPlane = sliceAndCreateOpening obj f1 f2 h_bottom h_top depth_pull
-                    if winPlane != undefined do (
-                        select winPlane
-                        max modify mode
-                        partitionPoly winPlane undefined colPositions rowPositions colSegData:colSegData rowSegData:rowSegData
-                        makeWindow()
-                    )
-                )
-                if winPlane == undefined do (
-                    if openingDidModify do try (max undo) catch ()
-                    messageBox (if openingError != "" then openingError else "原墙开洞失败。") title:"提示"
-                )
-            ) else if faceSel.count == 1 then (
+            if faceSel.count == 1 then (
                 logDebug "进入单面模式"
                 local f1 = faceSel[1]
                 
@@ -2050,43 +2023,83 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
                         messageBox (if openingError != "" then openingError else "原墙开洞失败。") title:"提示"
                     )
                 )
-            ) else if faceSel.count > 2 then (
-                undo "多面平面片窗" on (
-                    local faceSet = polyop.getFaceSelection obj
+            ) else if faceSel.count > 1 then (
+                undo "批量片窗" on (
+                    local initialFaceSel = (polyop.getFaceSelection obj) as array
                     local winPlanes = #()
                     local failedCount = 0
-                    for f in faceSel do (
-                        local winPlane = createWindowPlaneFromFace obj f
-                        if winPlane != undefined then (
-                            append winPlanes winPlane
-                        ) else (
-                            failedCount += 1
+                    
+                    struct FaceTargetInfo (center, normal, zMin, zMax)
+                    local targets = #()
+                    for f in initialFaceSel do (
+                        local verts = polyop.getFaceVerts obj f
+                        local z_min = 1e9, z_max = -1e9
+                        for v in verts do (
+                            local pos = (in coordsys world (polyop.getVert obj v))
+                            if pos.z < z_min do z_min = pos.z
+                            if pos.z > z_max do z_max = pos.z
                         )
+                        append targets (FaceTargetInfo center:(polyop.getFaceCenter obj f) normal:(polyop.getFaceNormal obj f) zMin:z_min zMax:z_max)
                     )
-                    if winPlanes.count > 0 then (
-                        try (polyop.deleteFaces obj faceSet) catch ()
-                        local madeCount = 0
-                        for winPlane in winPlanes do (
-                            local okMade = false
-                            try (
+                    
+                    for t in targets do (
+                        local curF = undefined
+                        local minDist = 1e9
+                        local numF = polyop.getNumFaces obj
+                        for i = 1 to numF do (
+                            local n = polyop.getFaceNormal obj i
+                            if (dot n t.normal) > 0.99 do (
+                                local me = polyop.getFaceCenter obj i
+                                local d = length (me - t.center)
+                                if d < 20.0 and d < minDist do (
+                                    minDist = d
+                                    curF = i
+                                )
+                            )
+                        )
+                        
+                        if curF != undefined then (
+                            local z_min = t.zMin
+                            local z_max = t.zMax
+                            local h_bottom = z_min
+                            if chkHeightEnable.checked do h_bottom += spnSill.value
+                            local h_top = z_max
+                            if chkHeightEnable.checked do h_top = h_bottom + spnWinHeight.value
+                            
+                            if h_bottom < z_min + 1.0 do h_bottom = z_min + 1.0
+                            if h_bottom > z_max - 20.0 do h_bottom = z_max - 20.0
+                            if h_top < h_bottom + 10.0 do h_top = h_bottom + 10.0
+                            if h_top > z_max do h_top = z_max
+                            
+                            local depth_pull = 0.0
+                            if chkHeightEnable.checked do depth_pull = spnDepth.value
+                            
+                            local f2 = findOppositeFace obj curF
+                            local winPlane = sliceAndCreateOpening obj curF f2 h_bottom h_top depth_pull
+                            if winPlane == undefined do (
+                                winPlane = createWindowPlaneFromFace obj curF h_bottom:h_bottom h_top:h_top depth_pull:depth_pull
+                            )
+                            
+                            if winPlane != undefined then (
                                 select winPlane
                                 max modify mode
                                 partitionPoly winPlane undefined colPositions rowPositions colSegData:colSegData rowSegData:rowSegData
                                 polyop.flipNormals winPlane #{1..(polyop.getNumFaces winPlane)}
                                 select winPlane
                                 makeWindow()
-                                madeCount += 1
-                                okMade = true
-                            ) catch (
+                                append winPlanes winPlane
+                            ) else (
                                 failedCount += 1
                             )
-                            if not okMade do try(delete winPlane)catch()
+                        ) else (
+                            failedCount += 1
                         )
-                        if failedCount > 0 do (
-                            messageBox ("批量生成完成 " + madeCount as string + "/" + faceSel.count as string + " 个。\n有 " + failedCount as string + " 个面没有成功，请检查这些面是否过窄、重叠或拓扑异常。") title:"提示"
-                        )
+                    )
+                    
+                    if winPlanes.count > 0 then (
+                        select winPlanes
                     ) else (
-                        messageBox "没有可生成的有效面，请检查选择的面是否过窄、重叠或拓扑异常。" title:"提示"
+                        messageBox "未能成功生成批量窗户。" title:"提示"
                     )
                 )
             ) else if isSingleQuadPlane obj then (
@@ -2098,7 +2111,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
                     makeWindow()
                 )
             ) else (
-                messageBox "请在 Editable Poly 中选择 1 个、2 个相反墙面，或多个四边形平面面；也可以选择一个单面的平面物体。" title:"提示"
+                messageBox "请在 Editable Poly 中选择 1 个面，或多个四边形平面面；也可以选择一个单面的平面物体。" title:"提示"
             )
         ) else (
             messageBox "请选择且仅选择一个对象！" title:"提示"
@@ -2157,7 +2170,28 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
         )
     )
 
+    fn updateHeightEnableState = (
+        try (
+            local state = chkHeightEnable.checked
+            spnSill.enabled = state
+            spnDepth.enabled = state
+            spnWinHeight.enabled = state
+        ) catch ()
+    )
+
     fn saveAllPresetsToINI = (
+        try (
+            setINISetting iniPathPc "Settings" "OuterSize" (spnOuterSize.value as string)
+            setINISetting iniPathPc "Settings" "InnerSize" (spnInnerSize.value as string)
+            setINISetting iniPathPc "Settings" "FrameDepth" (spnFrameThick.value as string)
+            setINISetting iniPathPc "Settings" "GlassDepth" (spnGlassThick.value as string)
+            setINISetting iniPathPc "Settings" "HeightEnable" (if chkHeightEnable.checked then "true" else "false")
+            setINISetting iniPathPc "Settings" "SillSize" (spnSill.value as string)
+            setINISetting iniPathPc "Settings" "DepthSize" (spnDepth.value as string)
+            setINISetting iniPathPc "Settings" "WinHeightSize" (spnWinHeight.value as string)
+            setINISetting iniPathPc "Settings" "WindowWidth" (UI_WinMakerToolPlus.width as string)
+            setINISetting iniPathPc "Settings" "WindowHeight" (UI_WinMakerToolPlus.height as string)
+        ) catch ()
         try (
             pchWriteEmbeddedData()
         ) catch (
@@ -2486,8 +2520,10 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
         lvPresets.ForeColor = (dotNetClass "System.Drawing.Color").White
         
         try (
-            local vWinW = pchGetEmbeddedSetting "WindowWidth"
-            local vWinH = pchGetEmbeddedSetting "WindowHeight"
+            local vWinW = getINISetting iniPathPc "Settings" "WindowWidth"
+            if vWinW == "" do vWinW = pchGetEmbeddedSetting "WindowWidth"
+            local vWinH = getINISetting iniPathPc "Settings" "WindowHeight"
+            if vWinH == "" do vWinH = pchGetEmbeddedSetting "WindowHeight"
             if vWinW != "" do UI_WinMakerToolPlus.width = amax 430 (vWinW as integer)
             if vWinH != "" do UI_WinMakerToolPlus.height = amax 510 (vWinH as integer)
         ) catch ()
@@ -2498,33 +2534,40 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
         refreshListView()
         
         try (
-            local vOut = pchGetEmbeddedSetting "OuterSize"
-            if vOut == "" do vOut = getINISetting iniPathPc "Settings" "OuterSize"
+            local vOut = getINISetting iniPathPc "Settings" "OuterSize"
+            if vOut == "" do vOut = pchGetEmbeddedSetting "OuterSize"
             if vOut != "" do spnOuterSize.value = vOut as float
-            local vIn = pchGetEmbeddedSetting "InnerSize"
-            if vIn == "" do vIn = getINISetting iniPathPc "Settings" "InnerSize"
+            
+            local vIn = getINISetting iniPathPc "Settings" "InnerSize"
+            if vIn == "" do vIn = pchGetEmbeddedSetting "InnerSize"
             if vIn != "" do spnInnerSize.value = vIn as float
-            local vFD = pchGetEmbeddedSetting "FrameDepth"
-            if vFD == "" do vFD = getINISetting iniPathPc "Settings" "FrameDepth"
+            
+            local vFD = getINISetting iniPathPc "Settings" "FrameDepth"
+            if vFD == "" do vFD = pchGetEmbeddedSetting "FrameDepth"
             if vFD != "" do spnFrameThick.value = vFD as float
-            local vGD = pchGetEmbeddedSetting "GlassDepth"
-            if vGD == "" do vGD = getINISetting iniPathPc "Settings" "GlassDepth"
+            
+            local vGD = getINISetting iniPathPc "Settings" "GlassDepth"
+            if vGD == "" do vGD = pchGetEmbeddedSetting "GlassDepth"
             if vGD != "" do spnGlassThick.value = vGD as float
 
-            
             -- Height controls
-            local vHeightEnable = pchGetEmbeddedSetting "HeightEnable"
-            if vHeightEnable == "" do vHeightEnable = getINISetting iniPathPc "Settings" "HeightEnable"
+            local vHeightEnable = getINISetting iniPathPc "Settings" "HeightEnable"
+            if vHeightEnable == "" do vHeightEnable = pchGetEmbeddedSetting "HeightEnable"
             if vHeightEnable != "" do chkHeightEnable.checked = (vHeightEnable == "true")
-            local vSill = pchGetEmbeddedSetting "SillSize"
-            if vSill == "" do vSill = getINISetting iniPathPc "Settings" "SillSize"
+            
+            local vSill = getINISetting iniPathPc "Settings" "SillSize"
+            if vSill == "" do vSill = pchGetEmbeddedSetting "SillSize"
             if vSill != "" do spnSill.value = vSill as float
-            local vDepth = pchGetEmbeddedSetting "DepthSize"
-            if vDepth == "" do vDepth = getINISetting iniPathPc "Settings" "DepthSize"
+            
+            local vDepth = getINISetting iniPathPc "Settings" "DepthSize"
+            if vDepth == "" do vDepth = pchGetEmbeddedSetting "DepthSize"
             if vDepth != "" do spnDepth.value = vDepth as float
-            local vWinHeight = pchGetEmbeddedSetting "WinHeightSize"
-            if vWinHeight == "" do vWinHeight = getINISetting iniPathPc "Settings" "WinHeightSize"
+            
+            local vWinHeight = getINISetting iniPathPc "Settings" "WinHeightSize"
+            if vWinHeight == "" do vWinHeight = pchGetEmbeddedSetting "WinHeightSize"
             if vWinHeight != "" do spnWinHeight.value = vWinHeight as float
+            
+            updateHeightEnableState()
         ) catch ()
     )
     
@@ -2652,6 +2695,19 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.6" width:430 height:510
     on btnMake pressed do (
         makeWindow()
     )
+
+    on chkHeightEnable changed state do (
+        updateHeightEnableState()
+        saveAllPresetsToINI()
+    )
+    
+    on spnOuterSize changed val do ( saveAllPresetsToINI() )
+    on spnInnerSize changed val do ( saveAllPresetsToINI() )
+    on spnFrameThick changed val do ( saveAllPresetsToINI() )
+    on spnGlassThick changed val do ( saveAllPresetsToINI() )
+    on spnSill changed val do ( saveAllPresetsToINI() )
+    on spnDepth changed val do ( saveAllPresetsToINI() )
+    on spnWinHeight changed val do ( saveAllPresetsToINI() )
 )
 
 try(destroyDialog UI_WinMakerToolPlus)catch()
@@ -2659,7 +2715,7 @@ try(closeRolloutFloater PC_Floater)catch()
 createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_sysmenu, #style_toolwindow, #style_resizing)
 --PCHPLUS_DATA_BEGIN
 --Settings|OuterSize=75.0|InnerSize=50.0|FrameDepth=80.0|GlassDepth=8.0|HeightEnable=true|SillSize=1200.0|DepthSize=250.0|WinHeightSize=1600.0|WindowWidth=430|WindowHeight=510
---PresetCount|19
+--PresetCount|20
 --Preset|1|1|27,48,24|35,64|0.0,0.271739,0.757246,1.0|0.0,0.355932,1.0|0.271739:2,1;0.757246:2,1|0.355932:1,3
 --Preset|2|2|26,45,28|72,27|0.0,0.264493,0.717391,1.0|0.0,0.720339,1.0|0.264493:2,1;0.717391:2,1|0.720339:1,2,3
 --Preset|3|3|30,69|68,31|0.0,0.304348,1.0|0.0,0.686441,1.0|0.304348:2,1|0.686441:1
@@ -2671,7 +2727,7 @@ createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_
 --Preset|9|9|100|38,61|0.0,1.0|0.0,0.389831,1.0|-|0.389831:1
 --Preset|10|10|49,50|100|0.0,0.496377,1.0|0.0,1.0|0.496377:1|-
 --Preset|11|11|23,53,22|30,69|0.0,0.235507,0.771739,1.0|0.0,0.309322,1.0|0.235507:2,1;0.771739:2,1|0.309322:1,3
---Preset|12|12|50,49|69,30|0.0,0.503623,1.0|0.0,0.699153,1.0|0.503623:1|0.699153:1,2
+--Preset|12|12|50,49|77,22|0.0,0.503623,1.0|0.0,0.771186,1.0|0.503623:1|0.771186:1,2
 --Preset|13|13|23,24,26,25|27,50,22|0.0,0.235507,0.481884,0.75,1.0|0.0,0.271186,0.779661,1.0|0.235507:2;0.481884:3,2,1;0.75:2|0.779661:1,2,3,4;0.271186:1,2,3,4
 --Preset|14|14|50,50|28,47,24|0.0,0.5,1.0|0.0,0.283898,0.758475,1.0|0.5:3,2,1|0.758475:1,2;0.283898:1,2
 --Preset|15|15|14,15,17,18,16,17|28,46,24|0.0,0.148551,0.300725,0.478261,0.663043,0.82971,1.0|0.0,0.288136,0.754237,1.0|0.148551:2;0.300725:3,2,1;0.478261:2;0.663043:3,2,1;0.82971:2|0.754237:1,2,3,4,5,6;0.288136:1,2,3,4,5,6
@@ -2679,4 +2735,5 @@ createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_
 --Preset|17|17|48,51|69,30|0.0,0.481884,1.0|0.0,0.694915,1.0|0.481884:2,1|0.694915:1,2
 --Preset|18|18|100|73,26|0.0,1.0|0.0,0.733051,1.0|-|0.733051:1
 --Preset|19|19|100|100|0.0,1.0|0.0,1.0|-|-
+--Preset|20|20|11,25,12,12,27,11|27,72|0.0,0.115942,0.369565,0.492754,0.615942,0.887681,1.0|0.0,0.275424,1.0|0.115942:2,1;0.369565:2,1;0.492754:2,1;0.615942:2,1;0.887681:2,1|0.275424:1,3,4,6
 --PCHPLUS_DATA_END
