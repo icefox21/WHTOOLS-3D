@@ -31,6 +31,11 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
         if WH_SmartExtrude_Rollout.edit_var == "p3_off" do WH_SmartExtrude_Rollout.p3_val_off = val
         if WH_SmartExtrude_Rollout.edit_var == "p4_off" do WH_SmartExtrude_Rollout.p4_val_off = val
         if WH_SmartExtrude_Rollout.edit_var == "p5_off" do WH_SmartExtrude_Rollout.p5_val_off = val
+        if WH_SmartExtrude_Rollout.edit_var == "p1_dbl" do WH_SmartExtrude_Rollout.p1_val_dbl = val
+        if WH_SmartExtrude_Rollout.edit_var == "p2_dbl" do WH_SmartExtrude_Rollout.p2_val_dbl = val
+        if WH_SmartExtrude_Rollout.edit_var == "p3_dbl" do WH_SmartExtrude_Rollout.p3_val_dbl = val
+        if WH_SmartExtrude_Rollout.edit_var == "p4_dbl" do WH_SmartExtrude_Rollout.p4_val_dbl = val
+        if WH_SmartExtrude_Rollout.edit_var == "p5_dbl" do WH_SmartExtrude_Rollout.p5_val_dbl = val
         WH_SmartExtrude_Rollout.saveSettings()
         destroyDialog WH_EditPreset_Rollout
     )
@@ -79,6 +84,17 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     group " POLY清理工具 (操作线) " (
         button btn_clean_remove_edge "移除所选边及残留点 (Ctrl+移除)" width:256 height:26 align:#center tooltip:"彻底移除所选边，并自动清理残留的多余孤立顶点！"
     )
+    group " POLY连双线 (生成窗洞边界) " (
+        spinner spn_dist_dbl "双线间距：" range:[0, 1000000, 0] type:#worldunits scale:1.0 fieldwidth:80 align:#left offset:[8, 6]
+
+        label lbl_preset_dbl "常用预设 (左键执行，右键自定义)：" align:#left offset:[8, 6]
+        button btn_p1_dbl "1200.0" width:70 height:20 align:#left across:3 offset:[2, 4]
+        button btn_p2_dbl "1500.0" width:70 height:20 align:#center offset:[0, 4]
+        button btn_last_dbl "上次:0" width:85 height:20 align:#right offset:[-2, 4]
+        button btn_p3_dbl "1800.0" width:70 height:20 align:#left across:3 offset:[2, 0]
+        button btn_p4_dbl "2000.0" width:70 height:20 align:#center offset:[0, 0]
+        button btn_p5_dbl "2400.0" width:85 height:20 align:#right offset:[-2, 0]
+    )
 
     -- 共享状态变量
     local targetNode = undefined
@@ -112,6 +128,16 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     local p3_val_off = -50.0
     local p4_val_off = -100.0
     local p5_val_off = 50.0
+    local p1_val_dbl = 1200.0
+    local p2_val_dbl = 1500.0
+    local p3_val_dbl = 1800.0
+    local p4_val_dbl = 2000.0
+    local p5_val_dbl = 2400.0
+    local last_val_dbl = 0.0
+    local isDragging_dbl = false
+    local ignoreChange_dbl = false
+    local hasRunInDrag_dbl = false
+    local origEdgeSel_dbl = #{}
     local last_val_off = 0.0
 
     -- 共享的预设编辑临时变量
@@ -142,6 +168,16 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
             if o4 != "" do p4_val_off = o4 as float
             local o5 = getINISetting iniPath "OffsetPresets" "Preset5"
             if o5 != "" do p5_val_off = o5 as float
+            local d1 = getINISetting iniPath "DoubleLinePresets" "Preset1"
+            if d1 != "" do p1_val_dbl = d1 as float
+            local d2 = getINISetting iniPath "DoubleLinePresets" "Preset2"
+            if d2 != "" do p2_val_dbl = d2 as float
+            local d3 = getINISetting iniPath "DoubleLinePresets" "Preset3"
+            if d3 != "" do p3_val_dbl = d3 as float
+            local d4 = getINISetting iniPath "DoubleLinePresets" "Preset4"
+            if d4 != "" do p4_val_dbl = d4 as float
+            local d5 = getINISetting iniPath "DoubleLinePresets" "Preset5"
+            if d5 != "" do p5_val_dbl = d5 as float
             last_val_off = (getINISetting iniPath "OffsetPresets" "LastValue") as float
             
             local ns = getINISetting iniPath "ExtrudeSettings" "NewSegment"
@@ -172,6 +208,11 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         setINISetting iniPath "OffsetPresets" "Preset3" (p3_val_off as string)
         setINISetting iniPath "OffsetPresets" "Preset4" (p4_val_off as string)
         setINISetting iniPath "OffsetPresets" "Preset5" (p5_val_off as string)
+        setINISetting iniPath "DoubleLinePresets" "Preset1" (p1_val_dbl as string)
+        setINISetting iniPath "DoubleLinePresets" "Preset2" (p2_val_dbl as string)
+        setINISetting iniPath "DoubleLinePresets" "Preset3" (p3_val_dbl as string)
+        setINISetting iniPath "DoubleLinePresets" "Preset4" (p4_val_dbl as string)
+        setINISetting iniPath "DoubleLinePresets" "Preset5" (p5_val_dbl as string)
         setINISetting iniPath "OffsetPresets" "LastValue" (last_val_off as string)
         
         setINISetting iniPath "ExtrudeSettings" "NewSegment" (if chk_new_segment.checked then "true" else "false")
@@ -738,6 +779,12 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         btn_p3_off.text = p3_val_off as string
         btn_p4_off.text = p4_val_off as string
         btn_p5_off.text = p5_val_off as string
+        btn_p1_dbl.text = p1_val_dbl as string
+        btn_p2_dbl.text = p2_val_dbl as string
+        btn_p3_dbl.text = p3_val_dbl as string
+        btn_p4_dbl.text = p4_val_dbl as string
+        btn_p5_dbl.text = p5_val_dbl as string
+        btn_last_dbl.text = "上次:" + (last_val_dbl as string)
         btn_last_off.text = "上次:" + (last_val_off as string)
     )
 
@@ -1120,6 +1167,195 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     -- ------------------------------------------
     -- POLY清理工具按钮事件
     -- ------------------------------------------
+    -- ------------------------------------------
+    -- POLY连双线 (造窗洞) 逻辑
+    -- ------------------------------------------
+    fn doDoubleLineCore dist node = (
+        try (
+            -- 强制重置连接段数为1，避免残留上次的2段连接
+            try(node.connectEdgeSegments = 1)catch()
+            try(node.connectEdgePinch = 0)catch()
+            try(node.connectEdgeSlide = 0)catch()
+            
+            node.EditablePoly.ConnectEdges()
+            local newEdgeSel = polyOp.getEdgeSelection node
+            if newEdgeSel.numberset > 0 then (
+                -- 强制设置为标准切角(0)，关闭Quad切角(1)，避免产生中间的多余连线
+                try(node.edgeChamferType = 0)catch()
+                try(node.edgeChamferSegments = 1)catch()
+                
+                node.edgeChamfer = (abs dist) / 2.0
+                node.EditablePoly.buttonOp #Chamfer
+                
+                -- 如果在某些新版Max中标准切角1段依然产生中线(变为3条线)，尝试通过拓扑清理
+                local afterChamferSel = polyOp.getEdgeSelection node
+                -- 切角后选中的是外侧的两条边。
+                
+                return true
+            )
+        ) catch ()
+        return false
+    )
+
+    fn executeDoubleLine dist = (
+        local targetNode = selection[1]
+        if targetNode == undefined or classOf targetNode != Editable_Poly then (
+            messageBox "请在 Editable Poly 物体下选择两条平行边。" title:"提示"
+            return false
+        )
+        if subObjectLevel != 2 then (
+            messageBox "请在边(Edge)层级下，选择两条平行边！" title:"提示"
+            return false
+        )
+        local edgeSel = polyOp.getEdgeSelection targetNode
+        if edgeSel.numberset != 2 do (
+            messageBox "请选中且仅选中 2 条边！" title:"提示"
+            return false
+        )
+        
+        local success = false
+        undo "POLY连双线" on (
+            success = doDoubleLineCore dist targetNode
+            update targetNode
+        )
+        if not success do messageBox "连双线失败，请确保选择的是同一个多边形上的两条对应边。" title:"提示"
+        
+        if success do (
+            last_val_dbl = dist
+            btn_last_dbl.text = "上次:" + (last_val_dbl as string)
+            saveSettings()
+        )
+        return success
+    )
+
+    on btn_p1_dbl pressed do executeDoubleLine p1_val_dbl
+    on btn_p1_dbl rightclick do (
+        edit_btn = btn_p1_dbl
+        edit_var = "p1_dbl"
+        edit_val = p1_val_dbl
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p2_dbl pressed do executeDoubleLine p2_val_dbl
+    on btn_p2_dbl rightclick do (
+        edit_btn = btn_p2_dbl
+        edit_var = "p2_dbl"
+        edit_val = p2_val_dbl
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p3_dbl pressed do executeDoubleLine p3_val_dbl
+    on btn_p3_dbl rightclick do (
+        edit_btn = btn_p3_dbl
+        edit_var = "p3_dbl"
+        edit_val = p3_val_dbl
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p4_dbl pressed do executeDoubleLine p4_val_dbl
+    on btn_p4_dbl rightclick do (
+        edit_btn = btn_p4_dbl
+        edit_var = "p4_dbl"
+        edit_val = p4_val_dbl
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p5_dbl pressed do executeDoubleLine p5_val_dbl
+    on btn_p5_dbl rightclick do (
+        edit_btn = btn_p5_dbl
+        edit_var = "p5_dbl"
+        edit_val = p5_val_dbl
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_last_dbl pressed do (
+        if last_val_dbl != 0.0 then executeDoubleLine last_val_dbl
+        else messageBox "没有上次使用记录！" title:"提示"
+    )
+
+    on spn_dist_dbl buttondown do (
+        theHold.SuperBegin()
+        targetNode = selection[1]
+        if targetNode != undefined and classOf targetNode == Editable_Poly and subObjectLevel == 2 and (polyOp.getEdgeSelection targetNode).numberset == 2 then (
+            origEdgeSel_dbl = polyOp.getEdgeSelection targetNode
+            isDragging_dbl = true
+            hasRunInDrag_dbl = false
+        ) else (
+            messageBox "请在边层级下选中且仅选中2条平行边！" title:"提示"
+            theHold.SuperCancel()
+            isDragging_dbl = false
+        )
+    )
+    
+    on spn_dist_dbl changed val do (
+        if ignoreChange_dbl do return ()
+        if isDragging_dbl and not origEdgeSel_dbl.isEmpty and targetNode != undefined do (
+            try (
+                if hasRunInDrag_dbl do (
+                    theHold.SuperCancel()
+                    theHold.SuperBegin()
+                )
+                undo "POLY连双线" on (
+                    polyOp.setEdgeSelection targetNode origEdgeSel_dbl
+                    local success = doDoubleLineCore val targetNode
+                    if success then (
+                        hasRunInDrag_dbl = true
+                        update targetNode
+                    ) else (
+                        theHold.SuperCancel()
+                        hasRunInDrag_dbl = false
+                        isDragging_dbl = false
+                    )
+                )
+            ) catch (
+                format "Error in spn_dist_dbl changed: %
+" (getCurrentException())
+                theHold.SuperCancel()
+                isDragging_dbl = false
+                hasRunInDrag_dbl = false
+            )
+        )
+    )
+    
+    on spn_dist_dbl buttonup inCancel do (
+        if isDragging_dbl do (
+            try (
+                if inCancel then (
+                    if hasRunInDrag_dbl do theHold.SuperCancel()
+                ) else (
+                    if hasRunInDrag_dbl then (
+                        theHold.SuperAccept "POLY连双线"
+                        local finalVal = spn_dist_dbl.value
+                        if finalVal != 0.0 do (
+                            last_val_dbl = finalVal
+                            btn_last_dbl.text = "上次:" + (last_val_dbl as string)
+                            saveSettings()
+                        )
+                    ) else (
+                        theHold.SuperCancel()
+                    )
+                )
+            ) catch (
+                format "Error in spn_dist_dbl buttonup: %
+" (getCurrentException())
+                theHold.SuperCancel()
+            )
+            isDragging_dbl = false
+            hasRunInDrag_dbl = false
+            ignoreChange_dbl = true; spn_dist_dbl.value = 0; ignoreChange_dbl = false
+        )
+    )
+    
+    on spn_dist_dbl entered inSpin inCancel do (
+        if not inSpin and not inCancel and not ignoreChange_dbl do (
+            local val = spn_dist_dbl.value
+            if val != 0 do (
+                executeDoubleLine val
+                ignoreChange_dbl = true; spn_dist_dbl.value = 0; ignoreChange_dbl = false
+            )
+        )
+    )
+
     on btn_clean_remove_edge pressed do (
         local targetNode = selection[1]
         if targetNode == undefined or classOf targetNode != Editable_Poly then (
@@ -1199,4 +1435,4 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     )
 )
 
-createDialog WH_SmartExtrude_Rollout width:280 height:420
+createDialog WH_SmartExtrude_Rollout width:280 height:550
