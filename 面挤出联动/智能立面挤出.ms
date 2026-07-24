@@ -37,7 +37,7 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
 -- ==========================================
 -- 2. 智能立面综合工具主面板
 -- ==========================================
-rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.2"
+rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
 (
     group " 智能面推拉 (操作面) " (
         checkbox chk_new_segment " 创建新分段（不联动）" checked:false align:#left offset:[8, 2] tooltip:"窗台石、线脚等独立构件可手动勾选；长窄条带会自动启用"
@@ -58,6 +58,10 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.2"
         button btn_p1_off "120" width:70 height:20 align:#left across:3 offset:[2, 4]
         button btn_p2_off "240" width:70 height:20 align:#center offset:[0, 4]
         button btn_last_off "上次:0" width:85 height:20 align:#right offset:[-2, 4]
+    )
+
+    group " POLY零距离挤出 (面/线 0,0) " (
+        button btn_zero_extrude "零距离挤出 (0,0 原位复制)" width:256 height:26 align:#center tooltip:"针对当前选中的面或线，执行 0 距离挤出并自动切到移动工具，可直接拖动位移！"
     )
 
     -- 共享状态变量
@@ -963,6 +967,51 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.2"
     -- ------------------------------------------
     -- 按钮及事件定义在最后，以避免占用自动布局行
     -- ------------------------------------------
+
+    -- ------------------------------------------
+    -- POLY零距离挤出按钮事件
+    -- ------------------------------------------
+    on btn_zero_extrude pressed do (
+        local targetNode = selection[1]
+        if targetNode == undefined or classOf targetNode != Editable_Poly then (
+            messageBox "请在 Editable Poly 物体下选择要挤出的面或边。" title:"提示"
+            return ()
+        )
+        
+        local subLevel = subObjectLevel
+        local faceSel = polyOp.getFaceSelection targetNode
+        local edgeSel = polyOp.getEdgeSelection targetNode
+        
+        undo "零距离挤出" on (
+            try (
+                if subLevel == 4 or subLevel == 5 or (not faceSel.isEmpty and subLevel != 2 and subLevel != 3) then (
+                    if faceSel.isEmpty then (
+                        messageBox "请先选择需要挤出的面！" title:"提示"
+                    ) else (
+                        polyOp.extrudeFaces targetNode faceSel 0.0
+                        update targetNode
+                        max move
+                    )
+                ) else if subLevel == 2 or subLevel == 3 or not edgeSel.isEmpty then (
+                    if edgeSel.isEmpty then (
+                        messageBox "请先选择需要挤出的边！" title:"提示"
+                    ) else (
+                        targetNode.edgeExtrudeHeight = 0.0
+                        targetNode.edgeExtrudeWidth = 0.0
+                        targetNode.EditablePoly.buttonOp #Extrude
+                        update targetNode
+                        max move
+                    )
+                ) else (
+                    messageBox "请在面层级或边层级下选择要挤出的元素。" title:"提示"
+                )
+            ) catch (
+                format "Error in btn_zero_extrude: %\n" (getCurrentException())
+                messageBox ("零距离挤出失败：" + (getCurrentException() as string)) title:"错误"
+            )
+        )
+    )
+
     button btn_help "?" width:16 height:16 pos:[256, 5] tooltip:"使用说明"
 
     on btn_help pressed do (
@@ -981,4 +1030,4 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.2"
     )
 )
 
-createDialog WH_SmartExtrude_Rollout width:280 height:230
+createDialog WH_SmartExtrude_Rollout width:280 height:290
