@@ -23,8 +23,14 @@ rollout WH_EditPreset_Rollout "自定义预设" width:220 height:95
         WH_SmartExtrude_Rollout.edit_btn.text = (val as string)
         if WH_SmartExtrude_Rollout.edit_var == "p1_ext" do WH_SmartExtrude_Rollout.p1_val_ext = val
         if WH_SmartExtrude_Rollout.edit_var == "p2_ext" do WH_SmartExtrude_Rollout.p2_val_ext = val
+        if WH_SmartExtrude_Rollout.edit_var == "p3_ext" do WH_SmartExtrude_Rollout.p3_val_ext = val
+        if WH_SmartExtrude_Rollout.edit_var == "p4_ext" do WH_SmartExtrude_Rollout.p4_val_ext = val
+        if WH_SmartExtrude_Rollout.edit_var == "p5_ext" do WH_SmartExtrude_Rollout.p5_val_ext = val
         if WH_SmartExtrude_Rollout.edit_var == "p1_off" do WH_SmartExtrude_Rollout.p1_val_off = val
         if WH_SmartExtrude_Rollout.edit_var == "p2_off" do WH_SmartExtrude_Rollout.p2_val_off = val
+        if WH_SmartExtrude_Rollout.edit_var == "p3_off" do WH_SmartExtrude_Rollout.p3_val_off = val
+        if WH_SmartExtrude_Rollout.edit_var == "p4_off" do WH_SmartExtrude_Rollout.p4_val_off = val
+        if WH_SmartExtrude_Rollout.edit_var == "p5_off" do WH_SmartExtrude_Rollout.p5_val_off = val
         WH_SmartExtrude_Rollout.saveSettings()
         destroyDialog WH_EditPreset_Rollout
     )
@@ -49,6 +55,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         button btn_p1_ext "120" width:70 height:20 align:#left across:3 offset:[2, 4]
         button btn_p2_ext "240" width:70 height:20 align:#center offset:[0, 4]
         button btn_last_ext "上次:0" width:85 height:20 align:#right offset:[-2, 4]
+        button btn_p3_ext "-50.0" width:70 height:20 align:#left across:3 offset:[2, 0]
+        button btn_p4_ext "-100.0" width:70 height:20 align:#center offset:[0, 0]
+        button btn_p5_ext "50.0" width:85 height:20 align:#right offset:[-2, 0]
     )
     
     group " POLY线偏移 (操作线) " (
@@ -58,6 +67,9 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         button btn_p1_off "120" width:70 height:20 align:#left across:3 offset:[2, 4]
         button btn_p2_off "240" width:70 height:20 align:#center offset:[0, 4]
         button btn_last_off "上次:0" width:85 height:20 align:#right offset:[-2, 4]
+        button btn_p3_off "-50.0" width:70 height:20 align:#left across:3 offset:[2, 0]
+        button btn_p4_off "-100.0" width:70 height:20 align:#center offset:[0, 0]
+        button btn_p5_off "50.0" width:85 height:20 align:#right offset:[-2, 0]
     )
 
     group " POLY零距离挤出 (面/线 0,0) " (
@@ -90,10 +102,16 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     
     local p1_val_ext = 120.0
     local p2_val_ext = 240.0
+    local p3_val_ext = -50.0
+    local p4_val_ext = -100.0
+    local p5_val_ext = 50.0
     local last_val_ext = 0.0
     
     local p1_val_off = 120.0
     local p2_val_off = 240.0
+    local p3_val_off = -50.0
+    local p4_val_off = -100.0
+    local p5_val_off = 50.0
     local last_val_off = 0.0
 
     -- 共享的预设编辑临时变量
@@ -108,10 +126,22 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         if doesFileExist iniPath then (
             p1_val_ext = (getINISetting iniPath "ExtrudePresets" "Preset1") as float
             p2_val_ext = (getINISetting iniPath "ExtrudePresets" "Preset2") as float
+            local t3 = getINISetting iniPath "ExtrudePresets" "Preset3"
+            if t3 != "" do p3_val_ext = t3 as float
+            local t4 = getINISetting iniPath "ExtrudePresets" "Preset4"
+            if t4 != "" do p4_val_ext = t4 as float
+            local t5 = getINISetting iniPath "ExtrudePresets" "Preset5"
+            if t5 != "" do p5_val_ext = t5 as float
             last_val_ext = (getINISetting iniPath "ExtrudePresets" "LastValue") as float
             
             p1_val_off = (getINISetting iniPath "OffsetPresets" "Preset1") as float
             p2_val_off = (getINISetting iniPath "OffsetPresets" "Preset2") as float
+            local o3 = getINISetting iniPath "OffsetPresets" "Preset3"
+            if o3 != "" do p3_val_off = o3 as float
+            local o4 = getINISetting iniPath "OffsetPresets" "Preset4"
+            if o4 != "" do p4_val_off = o4 as float
+            local o5 = getINISetting iniPath "OffsetPresets" "Preset5"
+            if o5 != "" do p5_val_off = o5 as float
             last_val_off = (getINISetting iniPath "OffsetPresets" "LastValue") as float
             
             local ns = getINISetting iniPath "ExtrudeSettings" "NewSegment"
@@ -132,10 +162,16 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     fn saveSettings = (
         setINISetting iniPath "ExtrudePresets" "Preset1" (p1_val_ext as string)
         setINISetting iniPath "ExtrudePresets" "Preset2" (p2_val_ext as string)
+        setINISetting iniPath "ExtrudePresets" "Preset3" (p3_val_ext as string)
+        setINISetting iniPath "ExtrudePresets" "Preset4" (p4_val_ext as string)
+        setINISetting iniPath "ExtrudePresets" "Preset5" (p5_val_ext as string)
         setINISetting iniPath "ExtrudePresets" "LastValue" (last_val_ext as string)
         
         setINISetting iniPath "OffsetPresets" "Preset1" (p1_val_off as string)
         setINISetting iniPath "OffsetPresets" "Preset2" (p2_val_off as string)
+        setINISetting iniPath "OffsetPresets" "Preset3" (p3_val_off as string)
+        setINISetting iniPath "OffsetPresets" "Preset4" (p4_val_off as string)
+        setINISetting iniPath "OffsetPresets" "Preset5" (p5_val_off as string)
         setINISetting iniPath "OffsetPresets" "LastValue" (last_val_off as string)
         
         setINISetting iniPath "ExtrudeSettings" "NewSegment" (if chk_new_segment.checked then "true" else "false")
@@ -692,10 +728,16 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         -- 填充面推拉 UI
         btn_p1_ext.text = p1_val_ext as string
         btn_p2_ext.text = p2_val_ext as string
+        btn_p3_ext.text = p3_val_ext as string
+        btn_p4_ext.text = p4_val_ext as string
+        btn_p5_ext.text = p5_val_ext as string
         btn_last_ext.text = "上次:" + (last_val_ext as string)
         -- 填充线偏移 UI
         btn_p1_off.text = p1_val_off as string
         btn_p2_off.text = p2_val_off as string
+        btn_p3_off.text = p3_val_off as string
+        btn_p4_off.text = p4_val_off as string
+        btn_p5_off.text = p5_val_off as string
         btn_last_off.text = "上次:" + (last_val_off as string)
     )
 
@@ -957,6 +999,30 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         createDialog WH_EditPreset_Rollout modal:true
     )
 
+    on btn_p3_ext pressed do executePushPull p3_val_ext
+    on btn_p3_ext rightclick do (
+        edit_btn = btn_p3_ext
+        edit_var = "p3_ext"
+        edit_val = p3_val_ext
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p4_ext pressed do executePushPull p4_val_ext
+    on btn_p4_ext rightclick do (
+        edit_btn = btn_p4_ext
+        edit_var = "p4_ext"
+        edit_val = p4_val_ext
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p5_ext pressed do executePushPull p5_val_ext
+    on btn_p5_ext rightclick do (
+        edit_btn = btn_p5_ext
+        edit_var = "p5_ext"
+        edit_val = p5_val_ext
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
     on btn_last_ext pressed do executePushPull last_val_ext
 
     on btn_p1_off pressed do executeOffset p1_val_off
@@ -972,6 +1038,30 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
         edit_btn = btn_p2_off
         edit_var = "p2_off"
         edit_val = p2_val_off
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p3_off pressed do executeOffset p3_val_off
+    on btn_p3_off rightclick do (
+        edit_btn = btn_p3_off
+        edit_var = "p3_off"
+        edit_val = p3_val_off
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p4_off pressed do executeOffset p4_val_off
+    on btn_p4_off rightclick do (
+        edit_btn = btn_p4_off
+        edit_var = "p4_off"
+        edit_val = p4_val_off
+        createDialog WH_EditPreset_Rollout modal:true
+    )
+
+    on btn_p5_off pressed do executeOffset p5_val_off
+    on btn_p5_off rightclick do (
+        edit_btn = btn_p5_off
+        edit_var = "p5_off"
+        edit_val = p5_val_off
         createDialog WH_EditPreset_Rollout modal:true
     )
 
@@ -1109,4 +1199,4 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     )
 )
 
-createDialog WH_SmartExtrude_Rollout width:280 height:360
+createDialog WH_SmartExtrude_Rollout width:280 height:420
