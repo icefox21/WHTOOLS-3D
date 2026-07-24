@@ -62,6 +62,10 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
 
     group " POLY零距离挤出 (面/线 0,0) " (
         button btn_zero_extrude "零距离挤出 (0,0 原位复制)" width:256 height:26 align:#center tooltip:"针对当前选中的面或线，执行 0 距离挤出并自动切到移动工具，可直接拖动位移！"
+
+    )
+    group " POLY清理工具 (操作线) " (
+        button btn_clean_remove_edge "移除所选边及残留点 (Ctrl+移除)" width:256 height:26 align:#center tooltip:"彻底移除所选边，并自动清理残留的多余孤立顶点！"
     )
 
     -- 共享状态变量
@@ -430,7 +434,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
 
         baseFaces = capFaces
         polyOp.setFaceSelection targetNode capFaces
-        format "[V3.1] caps=%, sides=%, stretchEdges=%, openEdges=%, autoIndependent=%\n" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count autoIndependentSegment
+        format "[V3.1] caps=%, sides=%, stretchEdges=%, openEdges=%, autoIndependent=%
+" capFaces.numberset sideFaces.numberset stretchEdgeData.count openBoundaryData.count autoIndependentSegment
         return true
     )
 
@@ -519,7 +524,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                 try (
                     success = prepareExtrusion independentSegment:independentSegment
                 ) catch (
-                    format "Error in prepareExtrusion: %\n" (getCurrentException())
+                    format "Error in prepareExtrusion: %
+" (getCurrentException())
                     success = false
                 )
                 if success do (
@@ -705,7 +711,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
             try (
                 success = prepareExtrusion()
             ) catch (
-                format "Error in prepareExtrusion: %\n" (getCurrentException())
+                format "Error in prepareExtrusion: %
+" (getCurrentException())
                 success = false
             )
         )
@@ -728,7 +735,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                     update targetNode
                 )
             ) catch (
-                format "Error in spn_dist_ext changed: %\n" (getCurrentException())
+                format "Error in spn_dist_ext changed: %
+" (getCurrentException())
                 theHold.SuperCancel()
                 isDragging_ext = false
             )
@@ -755,7 +763,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                     btn_last_ext.text = "上次:" + (last_val_ext as string)
                     saveSettings()
                 ) catch (
-                    format "Error in spn_dist_ext buttonup: %\n" (getCurrentException())
+                    format "Error in spn_dist_ext buttonup: %
+" (getCurrentException())
                     theHold.SuperCancel()
                 )
             ) else (
@@ -776,7 +785,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                         try (
                             success = prepareExtrusion()
                         ) catch (
-                            format "Error in prepareExtrusion: %\n" (getCurrentException())
+                            format "Error in prepareExtrusion: %
+" (getCurrentException())
                             success = false
                         )
                         if success do (
@@ -793,7 +803,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                         )
                     )
                 ) catch (
-                    format "Error in spn_dist_ext entered: %\n" (getCurrentException())
+                    format "Error in spn_dist_ext entered: %
+" (getCurrentException())
                 )
                 ignoreChange_ext = true; spn_dist_ext.value = 0; ignoreChange_ext = false
             )
@@ -882,7 +893,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                     )
                 )
             ) catch (
-                format "Error in spn_dist_off changed: %\n" (getCurrentException())
+                format "Error in spn_dist_off changed: %
+" (getCurrentException())
                 theHold.SuperCancel()
                 isDragging_off = false
                 hasRunInDrag_off = false
@@ -909,7 +921,8 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                     )
                 )
             ) catch (
-                format "Error in spn_dist_off buttonup: %\n" (getCurrentException())
+                format "Error in spn_dist_off buttonup: %
+" (getCurrentException())
                 theHold.SuperCancel()
             )
             isDragging_off = false
@@ -1006,8 +1019,62 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
                     messageBox "请在面层级或边层级下选择要挤出的元素。" title:"提示"
                 )
             ) catch (
-                format "Error in btn_zero_extrude: %\n" (getCurrentException())
+                format "Error in btn_zero_extrude: %
+" (getCurrentException())
                 messageBox ("零距离挤出失败：" + (getCurrentException() as string)) title:"错误"
+            )
+        )
+    )
+
+
+    -- ------------------------------------------
+    -- POLY清理工具按钮事件
+    -- ------------------------------------------
+    on btn_clean_remove_edge pressed do (
+        local targetNode = selection[1]
+        if targetNode == undefined or classOf targetNode != Editable_Poly then (
+            messageBox "请在 Editable Poly 物体下选择要移除的边。" title:"提示"
+            return ()
+        )
+        
+        local edgeSel = polyOp.getEdgeSelection targetNode
+        if edgeSel.isEmpty do (
+            messageBox "请先选择需要移除的边！" title:"提示"
+            return ()
+        )
+        
+        undo "移除边及残留点" on (
+            try (
+                local vertsToCheck = polyOp.getVertsUsingEdge targetNode edgeSel
+                
+                local oldLevel = subObjectLevel
+                if oldLevel != 2 do subObjectLevel = 2
+                
+                targetNode.EditablePoly.Remove()
+                
+                local vertsToRemove = #{}
+                local numVerts = polyOp.getNumVerts targetNode
+                for v in vertsToCheck do (
+                    if v <= numVerts do (
+                        local vEdges = polyOp.getEdgesUsingVert targetNode v
+                        if vEdges.numberset == 2 or vEdges.numberset == 0 do (
+                            vertsToRemove += #{v}
+                        )
+                    )
+                )
+                
+                if not vertsToRemove.isEmpty do (
+                    subObjectLevel = 1
+                    polyOp.setVertSelection targetNode vertsToRemove
+                    targetNode.EditablePoly.Remove()
+                )
+                
+                subObjectLevel = oldLevel
+                update targetNode
+            ) catch (
+                format "Error in btn_clean_remove_edge: %
+" (getCurrentException())
+                messageBox ("移除失败：" + (getCurrentException() as string)) title:"错误"
             )
         )
     )
@@ -1015,19 +1082,31 @@ rollout WH_SmartExtrude_Rollout "智能立面综合工具  V3.1"
     button btn_help "?" width:16 height:16 pos:[256, 5] tooltip:"使用说明"
 
     on btn_help pressed do (
-        local helpText = "【智能面推拉】\n" \
-                       + "1. 在面层级下，选择需要推拉的墙体或窗洞面。\n" \
-                       + "2. 【特色 - 智能开洞】：向内推至墙体背面深度（背面有相匹配多边形），释放鼠标会自动删面并缝合焊接，实现穿透开洞！\n" \
-                       + "3. 【特色 - 共面过滤】：平直大墙面上推拉局部面时，周围共面墙体不会变形拉伸，自动生成新边分段，与 SU 体验一致。\n" \
-                       + "4. 【创建新分段】：勾选后始终独立封边；长窄条带和相邻超大墙面会自动使用独立封边。\n" \
-                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并以独立封边方式对齐，适合窗台石等贴边构件。\n\n" \
-                       + "【POLY线偏移】\n" \
-                       + "- 在边层级选择边线，拖动偏移或一键应用常用预设，只保留单向智能偏移。\n\n" \
-                       + "【公共操作】\n" \
-                       + "- 预设按钮：左键直接运行，右键自定义数值并保存。\n" \
+        local helpText = "【智能面推拉】
+" \
+                       + "1. 在面层级下，选择需要推拉的墙体或窗洞面。
+" \
+                       + "2. 【特色 - 智能开洞】：向内推至墙体背面深度（背面有相匹配多边形），释放鼠标会自动删面并缝合焊接，实现穿透开洞！
+" \
+                       + "3. 【特色 - 共面过滤】：平直大墙面上推拉局部面时，周围共面墙体不会变形拉伸，自动生成新边分段，与 SU 体验一致。
+" \
+                       + "4. 【创建新分段】：勾选后始终独立封边；长窄条带和相邻超大墙面会自动使用独立封边。
+" \
+                       + "5. 【特色 - 对齐到点】：点击后在视口中捕捉任意物体顶点，并以独立封边方式对齐，适合窗台石等贴边构件。
+
+" \
+                       + "【POLY线偏移】
+" \
+                       + "- 在边层级选择边线，拖动偏移或一键应用常用预设，只保留单向智能偏移。
+
+" \
+                       + "【公共操作】
+" \
+                       + "- 预设按钮：左键直接运行，右键自定义数值并保存。
+" \
                        + "- 撤销支持：支持 Ctrl+Z 撤销（开洞及焊接会被作为单步历史撤销恢复）。"
         messageBox helpText title:"使用说明"
     )
 )
 
-createDialog WH_SmartExtrude_Rollout width:280 height:290
+createDialog WH_SmartExtrude_Rollout width:280 height:360
