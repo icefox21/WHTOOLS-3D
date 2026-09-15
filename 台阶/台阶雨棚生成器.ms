@@ -3,7 +3,7 @@
     global StairCanopyGen_Rollout
     try(destroyDialog StairCanopyGen_Rollout)catch()
     
-    rollout StairCanopyGen_Rollout "台阶雨棚生成器 v1.0" width:220 height:465 (
+    rollout StairCanopyGen_Rollout "台阶雨棚生成器 v1.1" width:220 height:500 (
         groupBox grp1 "踏步尺寸 (单位: mm)" pos:[5,5] width:210 height:115
         spinner spn_width "宽度:" range:[1,10000,300] type:#float pos:[15,25] fieldWidth:50 tooltip:"踏步深度"
         spinner spn_height "高度:" range:[1,10000,150] type:#float pos:[115,25] fieldWidth:50 tooltip:"踏步总高含盖板"
@@ -31,8 +31,10 @@
         
         checkbox chk_canopy "创建踏步时同时生成雨棚" pos:[15,375] checked:false
         checkbox chk_mirror "镜像雨棚开口方向" pos:[15,395] checked:false
+        spinner spn_clear "雨棚净空:" range:[0,20000,2400] type:#float pos:[15,418] fieldWidth:60 tooltip:"台阶顶到雨棚底的竖向间距 (mm)"
+        label lbl_clearUnit "mm" pos:[120,420]
         
-        label lbl_status "状态: 待命" pos:[5,420] width:210 height:40
+        label lbl_status "状态: 待命" pos:[5,445] width:210 height:40
         
         local pickedSpline = undefined
         local lastCreated = #()
@@ -52,6 +54,7 @@
             setINISetting iniFile "Settings" "Align" (rdo_align.state as string)
             setINISetting iniFile "Settings" "Canopy" (if chk_canopy.checked then "1" else "0")
             setINISetting iniFile "Settings" "Mirror" (if chk_mirror.checked then "1" else "0")
+            setINISetting iniFile "Settings" "Clear" (spn_clear.value as string)
         )
         
         fn loadSettings = (
@@ -85,12 +88,15 @@
                 
                 val = getINISetting iniFile "Settings" "Mirror"
                 if val != "" do chk_mirror.checked = (val == "1")
+                
+                val = getINISetting iniFile "Settings" "Clear"
+                if val != "" do spn_clear.value = val as float
             )
         )
         
         -- 模块化雨棚子生成函数
         fn buildCanopySub toSys = (
-            if pickedSpline == undefined or not isValidNode pickedSpline do return()
+            if pickedSpline == undefined or not isValidNode pickedSpline do return false
             
             -- 1. 创建雨棚截面 Profile (2D Spline)
             local profile = SplineShape name:"雨棚截面_Profile"
@@ -127,7 +133,11 @@
                 -- 2a. 若为直线，智能且高精度地在数学上构建出与顶级平台对齐的 U 形雨棚放样路径：
                 local p0 = pathInterp pickedSpline 1 0.0
                 local p1 = pathInterp pickedSpline 1 1.0
-                local lineDir = normalize ([p1.x-p0.x, p1.y-p0.y, 0])
+                local dxy = [p1.x-p0.x, p1.y-p0.y, 0]
+                if (length dxy) < 1e-6 do (
+                    return false
+                )
+                local lineDir = normalize dxy
                 local platW = distance [p0.x,p0.y,0] [p1.x,p1.y,0]
                 local fwd = normalize (cross lineDir [0,0,1])
                 if isReversed do fwd = -fwd
@@ -215,19 +225,40 @@
             profile.isHidden = true
             
             -- 计算台阶顶部的 3 倍台阶总高度偏移（无论是否伴随台阶一起生成，均在此高度生成，确保高度一致，防重叠）
-            local zOffset = 3.0 * (spn_count.value * spn_height.value) * toSys
+            -- 台阶顶标高 + 净空(默认2400mm) = 雨棚抬升高度
+            local stairTop = (spn_count.value * spn_height.value) * toSys
+            local clearance = spn_clear.value * toSys
+            local zOffset = stairTop + clearance
             if zOffset > 0.0 do (
                 move canopyPath [0, 0, zOffset]
                 move closedPath [0, 0, zOffset]
             )
             
+            -- 固定颜色，避免每次重建随机变色
+            canopyPath.wireColor = color 210 170 220
+            closedPath.wireColor = color 170 200 210
+            
             -- 将截面也存入创建列表，以便重建时能被一并自动删除，绝不留残留！
             lastCanopyCreated = #(canopyPath, closedPath, profile)
+            true
         )
         
         -- 高速创建台阶函数
-        fn buildStairs = (
-            if pickedSpline == undefined or not isValidNode pickedSpline do return undefined
+        fn buildStairs alsoCanopy:false = (
+            if pickedSpline == undefined or not isValidNode pickedSpline do (
+                lbl_status.text = "⚠️ 请先选择路径线"
+                return undefined
+            )
+            local nSteps = spn_count.value
+            local buildOK = false
+            local toSys = units.decodeValue "1mm"
+            local stepH = spn_height.value * toSys
+            local capThick = spn_cap.value * toSys
+            local bodyH = stepH - capThick
+            if bodyH <= 0.0 do (
+                lbl_status.text = "⚠️ 盖板厚度须小于踏步高度"
+                return undefined
+            )
             
             -- 性能优化：禁用重绘，切出修改面板
             disableSceneRedraw()
@@ -236,31 +267,30 @@
             
             try (
                 undo "创建台阶" on (
-                    -- 删除旧的记录（脱离旧线）
+                    -- 只重建台阶；雨棚默认保留，避免改踏步参数时雨棚被连带重建/变色
                     for obj in lastCreated do (if isValidNode obj do delete obj)
                     lastCreated = #()
-                    
-                    -- 删除旧的雨棚记录
-                    for obj in lastCanopyCreated do (if isValidNode obj do delete obj)
-                    lastCanopyCreated = #()
+                    if alsoCanopy do (
+                        for obj in lastCanopyCreated do (if isValidNode obj do delete obj)
+                        lastCanopyCreated = #()
+                    )
                     
                     local p0 = pathInterp pickedSpline 1 0.0
                     local p1 = pathInterp pickedSpline 1 1.0
-                    local lineDir = normalize ([p1.x-p0.x, p1.y-p0.y, 0])
+                    local dxy = [p1.x-p0.x, p1.y-p0.y, 0]
+                    if (length dxy) < 1e-6 do (
+                        throw "路径线在平面上长度为0，请检查样条线"
+                    )
+                    local lineDir = normalize dxy
                     local platW = distance [p0.x,p0.y,0] [p1.x,p1.y,0]
                     local fwd = normalize (cross lineDir [0,0,1])
                     if isReversed do fwd = -fwd
                     
-                    local toSys = units.decodeValue "1mm"
                     local stepW = spn_width.value * toSys
-                    local stepH = spn_height.value * toSys
-                    local capOH = spn_cap.value * toSys
-                    local capThick = capOH
-                    local bodyH = stepH - capThick
+                    local capOH = capThick
                     local guardW = spn_guard.value * toSys
                     local platDepth = spn_plat.value * toSys
                     local guardUp = 50.0 * toSys   
-                    local nSteps = spn_count.value
                     local stepType = rdo_type.state
                     
                     local totalDepth = (nSteps - 1) * stepW + platDepth
@@ -349,26 +379,29 @@
                         if isValidNode obj do CenterPivot obj
                     )
                     
-                    -- 检查是否开启“同时生成雨棚与中央楼板”
-                    if chk_canopy.checked do (
+                    -- 仅在 alsoCanopy（点创建/勾选时）才生成雨棚
+                    if alsoCanopy and chk_canopy.checked do (
                         buildCanopySub toSys
                     )
                     
                     local toSelect = #()
                     join toSelect lastCreated
-                    join toSelect lastCanopyCreated
+                    if alsoCanopy do join toSelect lastCanopyCreated
+                    if toSelect.count == 0 do toSelect = lastCreated
                     select toSelect
+                    buildOK = true
                 )
             ) catch (
                 format "Error: %\n" (getCurrentException())
+                lbl_status.text = "❌ 生成失败: " + (getCurrentException() as string)
             )
             
             setCommandPanelTaskMode oldPanel
             enableSceneRedraw()
             completeRedraw()
-            local statusMsg = "✅ 生成完毕 (" + (nSteps as string) + "级)"
-            if chk_canopy.checked do statusMsg += " + 雨棚"
-            lbl_status.text = statusMsg
+            if buildOK do (
+                lbl_status.text = "✅ 台阶已更新 (" + (nSteps as string) + "级)"
+            )
         )
         
         -- 单独生成雨棚入口函数
@@ -382,6 +415,7 @@
             local oldPanel = getCommandPanelTaskMode()
             setCommandPanelTaskMode #create
             
+            local canopyOK = false
             try (
                 undo "单独创建雨棚" on (
                     -- 清除旧的雨棚记录
@@ -389,26 +423,34 @@
                     lastCanopyCreated = #()
                     
                     local toSys = units.decodeValue "1mm"
-                    buildCanopySub toSys
-                    select lastCanopyCreated
+                    canopyOK = buildCanopySub toSys
+                    if canopyOK do select lastCanopyCreated
                 )
             ) catch (
                 format "Error: %\n" (getCurrentException())
+                canopyOK = false
             )
             
             setCommandPanelTaskMode oldPanel
             enableSceneRedraw()
             completeRedraw()
-            lbl_status.text = "✅ 雨棚与楼板创建完毕"
+            if canopyOK then (
+                lbl_status.text = "✅ 雨棚与楼板创建完毕"
+            ) else (
+                lbl_status.text = "❌ 雨棚创建失败，请检查路径线"
+            )
         )
         
-        fn autoRebuild = (
+        fn autoRebuildStairs = (
             if pickedSpline != undefined and isValidNode pickedSpline do (
-                if lastCreated.count > 0 then (
-                    buildStairs()
-                ) else if lastCanopyCreated.count > 0 do (
-                    buildCanopyOnly()
-                )
+                if lastCreated.count > 0 do buildStairs alsoCanopy:false
+            )
+            saveSettings()
+        )
+        
+        fn autoRebuildCanopy = (
+            if pickedSpline != undefined and isValidNode pickedSpline do (
+                if lastCanopyCreated.count > 0 do buildCanopyOnly()
             )
             saveSettings()
         )
@@ -421,25 +463,38 @@
             saveSettings()
         )
         
-        on spn_width changed v do autoRebuild(); on spn_height changed v do autoRebuild()
-        on spn_guard changed v do autoRebuild(); on spn_cap changed v do autoRebuild()
-        on spn_plat changed v do autoRebuild(); on spn_count changed v do autoRebuild()
-        on rdo_type changed v do autoRebuild(); on rdo_align changed v do autoRebuild()
-        on chk_canopy changed state do autoRebuild()
-        on chk_mirror changed state do autoRebuild()
+        on spn_width changed v do autoRebuildStairs(); on spn_height changed v do autoRebuildStairs()
+        on spn_guard changed v do autoRebuildStairs(); on spn_cap changed v do autoRebuildStairs()
+        on spn_plat changed v do autoRebuildStairs(); on spn_count changed v do autoRebuildStairs()
+        on rdo_type changed v do autoRebuildStairs(); on rdo_align changed v do autoRebuildStairs()
+        on chk_mirror changed state do autoRebuildCanopy()
+        on spn_clear changed v do autoRebuildCanopy()
+        on chk_canopy changed state do (
+            -- 勾上且已有路径：若还没有雨棚则补建；取消勾选不删已有雨棚
+            if chk_canopy.checked and pickedSpline != undefined and isValidNode pickedSpline do (
+                if lastCanopyCreated.count == 0 do buildCanopyOnly()
+            )
+            saveSettings()
+        )
         
         on btn_pick pressed do (
             local obj = pickObject message:"点选线" filter:(fn f o = superClassOf o == Shape)
             if obj != undefined then (
                 pickedSpline = obj; lastCreated = #(); lastCanopyCreated = #(); btn_create.enabled = true
-                lbl_platW.text = "基线长: " + (formattedPrint ((curveLength pickedSpline 1)/(units.decodeValue "1mm")) format:".1f") + " mm"
+                local lenMM = 0.0
+                try (
+                    if numSplines pickedSpline > 0 do (
+                        lenMM = (curveLength pickedSpline 1) / (units.decodeValue "1mm")
+                    )
+                ) catch()
+                lbl_platW.text = "基线长: " + (formattedPrint lenMM format:".1f") + " mm"
             )
         )
         
         on btn_create pressed do (
             local sel = selection as array
             if sel.count == 1 and superClassOf sel[1] == Shape do (pickedSpline = sel[1]; lastCreated = #(); lastCanopyCreated = #())
-            buildStairs()
+            buildStairs alsoCanopy:true
         )
         
         on btn_canopy_only pressed do (
@@ -448,7 +503,12 @@
             buildCanopyOnly()
         )
         
-        on btn_reverse pressed do (isReversed = not isReversed; buildStairs())
+        on btn_reverse pressed do (
+            isReversed = not isReversed
+            if pickedSpline != undefined and isValidNode pickedSpline do (
+                buildStairs alsoCanopy:(lastCanopyCreated.count > 0)
+            )
+        )
         
         on btn_clear pressed do (
             undo "清除" on (

@@ -3,6 +3,12 @@
 
 # 备份目录
 0备份/
+*.bak
+*.ms.bak
+*.ms.bak2
+*.savebak
+*_before_*.ms
+*_Backup_*.ms
 
 # agents配置
 .agents/

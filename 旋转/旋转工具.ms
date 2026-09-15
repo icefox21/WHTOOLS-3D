@@ -1,173 +1,292 @@
--- æ—‹è½¬å·¥å…· v1.0
+-- Ğı×ª¹¤¾ß v2.2
+-- Õı½»ÊÓÍ¼£ºµã×óÓÒ = ÈÆ¡¸ÊÓÍ¼ÊúÖá¡¹£¨ÆÁÄ»ÉÏÏÂ·½ÏòµÄÖá£©£¬µãÉÏÏÂ = ÈÆ¡¸ÊÓÍ¼ºáÖá¡¹
 (
-    global WhRotation_Rollout
-    try(destroyDialog WhRotation_Rollout)catch()
-    
-    -- é»˜è®¤é¢„è®¾å€¼
-    local presetX = #(90.0, 180.0, -90.0)
-    local presetY = #(90.0, 180.0, -90.0)
-    local presetZ = #(90.0, 180.0, -90.0)
-    
-    fn rotateSelection axis angle = (
-        if selection.count == 0 do return()
-        undo "æ—‹è½¬å·¥å…·" on (
-            local vtm = getViewTM()
-            if vtm == undefined do vtm = matrix3 1
-            -- æç«¯é‡è¦ï¼šå¿…é¡»æ¶ˆé™¤è§†å›¾çŸ©é˜µçš„â€œæ‘„åƒæœºä½ç½®å¹³ç§»â€ï¼Œå˜æˆçº¯æ­£çš„è§‚å¯Ÿæ–¹å‘æ—‹è½¬çŸ©é˜µï¼Œå¦åˆ™ç‰©ä½“ä¼šç»•ç€è¿œå¤„çš„æ‘„åƒæœºå…¬è½¬è€Œé£èµ°ï¼
-            vtm.translation = [0, 0, 0]
-            
-            local rotM = case axis of (
-                #x: rotateXMatrix angle
-                #y: rotateYMatrix angle
-                #z: rotateZMatrix angle
-            )
-            
-            -- ä»…æ“ä½œé¡¶å±‚èŠ‚ç‚¹ï¼Œé˜²æ­¢å¯¹ç»„å†…å­å±‚çº§è¿›è¡ŒäºŒæ¬¡åŒé‡å˜æ¢
-            local topNodes = for n in selection where (n.parent == undefined or not n.parent.isSelected) collect n
-            
-            for obj in topNodes do (
-                -- è¯»å–æ¯ä¸ªç‰©ä½“çš„çœŸå®è½´å¿ƒ(Pivot)è€Œä¸æ˜¯å‡ ä½•ä¸­å¿ƒï¼Œæ”¯æŒç”¨æˆ·è‡ªå®šä¹‰æ—‹è½¬è½´ï¼
-                local ctr = obj.pivot
-                local pivotTM = (transMatrix -ctr) * vtm * rotM * (inverse vtm) * (transMatrix ctr)
-                obj.transform = obj.transform * pivotTM
+    global WhSpin_Rollout
+    global WhSpinTool
+    global WhSpinDrawFn
+    global WhSpin_Angle = 90.0
+    global WhSpin_Presets = #(90.0, 45.0, 15.0, 5.0)
+    global WhSpin_IniFile = getDir #plugcfg + "\\WhSpin_Settings.ini"
+    global WhSpin_ToolActive = false
+
+    try (destroyDialog WhSpin_Rollout) catch()
+    try (unRegisterRedrawViewsCallback WhSpinDrawFn) catch()
+    try (stopTool WhSpinTool) catch()
+
+    fn WhSpinTopNodes = (
+        for n in selection where (n.parent == undefined or not n.parent.isSelected) collect n
+    )
+
+    -- ÊÓÍ¼Öá£ºrow1=ÆÁÄ»ÓÒ£¬row2=ÆÁÄ»ÉÏ£¬row3=ÊÓÏß
+    fn WhSpinViewAxes = (
+        local vtm = getViewTM()
+        local right = vtm.row1
+        local up = vtm.row2
+        if (length right) < 1e-8 do right = [1, 0, 0]
+        if (length up) < 1e-8 do up = [0, 1, 0]
+        #(normalize right, normalize up)
+    )
+
+    -- ÈÆ¸ø¶¨ÊÀ½ç·½ÏòÖá¡¢ÒÔ Pivot ÎªÖĞĞÄĞı×ª
+    fn WhSpinRotateAxis axisVec angle = (
+        if angle == 0 do return()
+        local tops = WhSpinTopNodes()
+        if tops.count == 0 do return()
+        undo "WhSpin Ğı×ª" on (
+            for obj in tops do (
+                about obj.pivot rotate obj (angleAxis angle axisVec)
             )
         )
     )
 
-    rollout WhRotation_Rollout "å¿«é€Ÿæ—‹è½¬å·¥å…·" width:220 height:240 (
-        local iniFile = getDir #plugcfg + "\\WhRotation_Settings.ini"
-        
-        fn saveSettings = (
+    -- ×óÓÒ = ÈÆÊÓÍ¼ÊúÖá£¨ÆÁÄ»ÉÏÊú×ÅµÄÄÇ¸ùÖá£¬Ç°ÊÓÍ¼Àï³£ÊÇÊÀ½çZ»òY£©
+    -- ÉÏÏÂ = ÈÆÊÓÍ¼ºáÖá£¨ÆÁÄ»ÉÏºá×ÅµÄÄÇ¸ùÖá£©
+    fn WhSpinDo dir = (
+        local a = WhSpin_Angle
+        local ax = WhSpinViewAxes()
+        local right = ax[1]
+        local up = ax[2]
+        case dir of (
+            #left:  WhSpinRotateAxis up (-a)
+            #right: WhSpinRotateAxis up (a)
+            #up:    WhSpinRotateAxis right (a)
+            #down:  WhSpinRotateAxis right (-a)
+        )
+    )
+
+    -- µã»÷µãÏà¶Ô Pivot£ºÏÈ»»µ½ÊÓÍ¼¿Õ¼ä£¬È¡ÆÁÄ»ÓÒ/ÉÏ·ÖÁ¿
+    -- Õı½»ÏÂ worldPoint ÂäÔÚ¹¹ÔìÆ½ÃæÉÏ£¬²»ÄÜÖ±½ÓÓÃÊÀ½ç×ø±ê²î
+    fn WhSpinClickDelta obj clickWp = (
+        local inv = inverse (getViewTM())
+        local c = clickWp * inv
+        local p = obj.pivot * inv
+        [c.x - p.x, c.y - p.y]
+    )
+
+    -- ¸üÎÈ£ºÓÃÊÓÍ¼¿Õ¼äÀï£¬°Ñµã»÷ÉäÏßÓë¹ı Pivot¡¢ÃæÏòÏà»úµÄÆ½ÃæÇó½»
+    fn WhSpinClickOnViewPlane obj = (
+        local vtm = getViewTM()
+        local inv = inverse vtm
+        local pivV = obj.pivot * inv
+        local clickV = undefined
+        try (clickV = viewPoint) catch()
+        if clickV == undefined do (
             try (
-                setINISetting iniFile "Settings" "AngleX" (spnX.value as string)
-                setINISetting iniFile "Settings" "AngleY" (spnY.value as string)
-                setINISetting iniFile "Settings" "AngleZ" (spnZ.value as string)
-                setINISetting iniFile "Presets" "X1" (presetX[1] as string)
-                setINISetting iniFile "Presets" "X2" (presetX[2] as string)
-                setINISetting iniFile "Presets" "X3" (presetX[3] as string)
-                setINISetting iniFile "Presets" "Y1" (presetY[1] as string)
-                setINISetting iniFile "Presets" "Y2" (presetY[2] as string)
-                setINISetting iniFile "Presets" "Y3" (presetY[3] as string)
-                setINISetting iniFile "Presets" "Z1" (presetZ[1] as string)
-                setINISetting iniFile "Presets" "Z2" (presetZ[2] as string)
-                setINISetting iniFile "Presets" "Z3" (presetZ[3] as string)
+                local wp = worldPoint
+                clickV = wp * inv
             ) catch()
         )
-        
-        fn loadSettings = (
-            try (
-                if doesFileExist iniFile do (
-                    local v = getINISetting iniFile "Settings" "AngleX"
-                    if v != "" do spnX.value = v as float
-                    v = getINISetting iniFile "Settings" "AngleY"
-                    if v != "" do spnY.value = v as float
-                    v = getINISetting iniFile "Settings" "AngleZ"
-                    if v != "" do spnZ.value = v as float
-                    
-                    v = getINISetting iniFile "Presets" "X1"
-                    if v != "" do (presetX[1] = v as float; btnX1.text = (v as string))
-                    v = getINISetting iniFile "Presets" "X2"
-                    if v != "" do (presetX[2] = v as float; btnX2.text = (v as string))
-                    v = getINISetting iniFile "Presets" "X3"
-                    if v != "" do (presetX[3] = v as float; btnX3.text = (v as string))
-                    
-                    v = getINISetting iniFile "Presets" "Y1"
-                    if v != "" do (presetY[1] = v as float; btnY1.text = (v as string))
-                    v = getINISetting iniFile "Presets" "Y2"
-                    if v != "" do (presetY[2] = v as float; btnY2.text = (v as string))
-                    v = getINISetting iniFile "Presets" "Y3"
-                    if v != "" do (presetY[3] = v as float; btnY3.text = (v as string))
-                    
-                    v = getINISetting iniFile "Presets" "Z1"
-                    if v != "" do (presetZ[1] = v as float; btnZ1.text = (v as string))
-                    v = getINISetting iniFile "Presets" "Z2"
-                    if v != "" do (presetZ[2] = v as float; btnZ2.text = (v as string))
-                    v = getINISetting iniFile "Presets" "Z3"
-                    if v != "" do (presetZ[3] = v as float; btnZ3.text = (v as string))
+        if clickV == undefined do return undefined
+        -- ÓÃµã»÷µÄÊÓÍ¼X/Y£¬Éî¶È¶ÔÆëµ½ Pivot£¨Õı½»ÏÂÕâÑù×îÎÈ£©
+        [clickV.x - pivV.x, clickV.y - pivV.y]
+    )
+
+    fn WhSpinDirFromDelta d = (
+        if d == undefined do return undefined
+        if (abs d.x) >= (abs d.y) then (
+            if d.x >= 0 then #right else #left
+        ) else (
+            if d.y >= 0 then #up else #down
+        )
+    )
+
+    fn WhSpinWorldToScreen wp = (
+        local r = undefined
+        try (r = mapWorldToScreen wp) catch()
+        if r != undefined do return r
+        try (r = viewport.mapWorldToScreen wp) catch()
+        if r != undefined do return r
+        undefined
+    )
+
+    fn WhSpinHandleOffsets pivot = (
+        local ax = WhSpinViewAxes()
+        local right = ax[1]
+        local up = ax[2]
+        local pix = 56.0
+        local wOff = 100.0
+        try (
+            local s = getScreenScaleFactor pivot
+            if s != undefined and (abs s) > 1e-8 do wOff = pix / (abs s)
+        ) catch()
+        if wOff < 0.01 do wOff = 0.01
+        #(right * wOff, -right * wOff, up * wOff, -up * wOff)
+    )
+
+    fn WhSpinDrawFn = (
+        try (
+            if not WhSpin_ToolActive do return()
+            local tops = WhSpinTopNodes()
+            if tops.count == 0 do return()
+            local p = tops[1].pivot
+            local offs = WhSpinHandleOffsets p
+            gw.setColor #line (color 255 140 40)
+            gw.setLineWidth 3
+            gw.marker (p + offs[1]) #circle
+            gw.marker (p + offs[2]) #circle
+            gw.marker (p + offs[3]) #circle
+            gw.marker (p + offs[4]) #circle
+            gw.setColor #line (color 255 220 120)
+            gw.hText (p + offs[3] * 1.3) "ÉÏ=ÈÆºáÖá"
+            gw.hText (p + offs[4] * 1.3) "ÏÂ=ÈÆºáÖá"
+            gw.hText (p + offs[1] * 1.3) "ÓÒ=ÈÆÊúÖá"
+            gw.hText (p + offs[2] * 1.3) "×ó=ÈÆÊúÖá"
+        ) catch()
+    )
+
+    fn WhSpinStartFeedback = (
+        WhSpin_ToolActive = true
+        try (unRegisterRedrawViewsCallback WhSpinDrawFn) catch()
+        registerRedrawViewsCallback WhSpinDrawFn
+        completeRedraw()
+    )
+
+    fn WhSpinStopFeedback = (
+        WhSpin_ToolActive = false
+        try (unRegisterRedrawViewsCallback WhSpinDrawFn) catch()
+        completeRedraw()
+    )
+
+    tool WhSpinTool
+    (
+        on activate do WhSpinStartFeedback()
+        on deactivate do WhSpinStopFeedback()
+        on mousePoint click do (
+            if click == 1 then (
+                if selection.count == 0 then (
+                    messagebox "ÇëÏÈÑ¡ÔñÒªĞı×ªµÄÎïÌå¡£" title:"Ğı×ª¹¤¾ß"
+                    #stop
+                ) else (
+                    local tops = WhSpinTopNodes()
+                    if tops.count > 0 do (
+                        local obj = tops[1]
+                        local d = WhSpinClickOnViewPlane obj
+                        if d == undefined do (
+                            try (d = WhSpinClickDelta obj worldPoint) catch()
+                        )
+                        local dir = WhSpinDirFromDelta d
+                        if dir != undefined do WhSpinDo dir
+                        completeRedraw()
+                    )
                 )
-            ) catch()
+            ) else if click == 3 then (
+                #stop
+            )
         )
-
-        groupBox grpX "X è½´" pos:[5,5] width:210 height:70
-        spinner spnX "è§’åº¦:" range:[-3600,3600,90] type:#float pos:[15,25] fieldWidth:50
-        button btnX_apply "æ—‹è½¬" pos:[125,23] width:80 height:22
-        button btnX1 "90" pos:[15,48] width:60 height:20
-        button btnX2 "180" pos:[80,48] width:60 height:20
-        button btnX3 "-90" pos:[145,48] width:60 height:20
-        
-        groupBox grpY "Y è½´" pos:[5,80] width:210 height:70
-        spinner spnY "è§’åº¦:" range:[-3600,3600,90] type:#float pos:[15,100] fieldWidth:50
-        button btnY_apply "æ—‹è½¬" pos:[125,98] width:80 height:22
-        button btnY1 "90" pos:[15,123] width:60 height:20
-        button btnY2 "180" pos:[80,123] width:60 height:20
-        button btnY3 "-90" pos:[145,123] width:60 height:20
-        
-        groupBox grpZ "Z è½´" pos:[5,155] width:210 height:70
-        spinner spnZ "è§’åº¦:" range:[-3600,3600,90] type:#float pos:[15,175] fieldWidth:50
-        button btnZ_apply "æ—‹è½¬" pos:[125,173] width:80 height:22
-        button btnZ1 "90" pos:[15,198] width:60 height:20
-        button btnZ2 "180" pos:[80,198] width:60 height:20
-        button btnZ3 "-90" pos:[145,198] width:60 height:20
-
-        -- X è½´äº‹ä»¶
-        on btnX_apply pressed do rotateSelection #x spnX.value
-        on btnX1 pressed do rotateSelection #x presetX[1]
-        on btnX2 pressed do rotateSelection #x presetX[2]
-        on btnX3 pressed do rotateSelection #x presetX[3]
-        
-        on btnX1 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾1?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetX[1] = spnX.value; btnX1.text = (spnX.value as string); saveSettings())
-        )
-        on btnX2 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾2?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetX[2] = spnX.value; btnX2.text = (spnX.value as string); saveSettings())
-        )
-        on btnX3 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾3?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetX[3] = spnX.value; btnX3.text = (spnX.value as string); saveSettings())
-        )
-
-        -- Y è½´äº‹ä»¶
-        on btnY_apply pressed do rotateSelection #y spnY.value
-        on btnY1 pressed do rotateSelection #y presetY[1]
-        on btnY2 pressed do rotateSelection #y presetY[2]
-        on btnY3 pressed do rotateSelection #y presetY[3]
-        
-        on btnY1 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾1?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetY[1] = spnY.value; btnY1.text = (spnY.value as string); saveSettings())
-        )
-        on btnY2 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾2?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetY[2] = spnY.value; btnY2.text = (spnY.value as string); saveSettings())
-        )
-        on btnY3 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾3?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetY[3] = spnY.value; btnY3.text = (spnY.value as string); saveSettings())
-        )
-
-        -- Z è½´äº‹ä»¶
-        on btnZ_apply pressed do rotateSelection #z spnZ.value
-        on btnZ1 pressed do rotateSelection #z presetZ[1]
-        on btnZ2 pressed do rotateSelection #z presetZ[2]
-        on btnZ3 pressed do rotateSelection #z presetZ[3]
-        
-        on btnZ1 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾1?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetZ[1] = spnZ.value; btnZ1.text = (spnZ.value as string); saveSettings())
-        )
-        on btnZ2 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾2?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetZ[2] = spnZ.value; btnZ2.text = (spnZ.value as string); saveSettings())
-        )
-        on btnZ3 rightClick do (
-            local val = queryBox "æ˜¯å¦å°†å½“å‰è¾“å…¥æ¡†çš„å€¼è®¾ä¸ºé¢„è®¾3?" title:"è®¾ç½®é¢„è®¾"
-            if val do (presetZ[3] = spnZ.value; btnZ3.text = (spnZ.value as string); saveSettings())
-        )
-        
-        on WhRotation_Rollout open do loadSettings()
-        on WhRotation_Rollout close do saveSettings()
+        on mouseAbort click do #stop
     )
-    createDialog WhRotation_Rollout style:#(#style_titlebar, #style_sysmenu, #style_toolwindow)
+
+    fn WhSpinStartTool = (
+        if selection.count == 0 do (
+            messagebox "ÇëÏÈÑ¡ÔñÒªĞı×ªµÄÎïÌå¡£" title:"Ğı×ª¹¤¾ß"
+            return()
+        )
+        try (stopTool WhSpinTool) catch()
+        startTool WhSpinTool prompt:"¡¾Ğı×ª¡¿µã×óÓÒ=ÈÆÆÁÄ»ÉÏÊúÖá£¬µãÉÏÏÂ=ÈÆÆÁÄ»ÉÏºáÖá | ÓÒ¼ü/Esc ½áÊø"
+    )
+
+    fn WhSpinSave = (
+        try (
+            setINISetting WhSpin_IniFile "Settings" "Angle" (WhSpin_Angle as string)
+            for i = 1 to 4 do (
+                setINISetting WhSpin_IniFile "Presets" ("P" + i as string) (WhSpin_Presets[i] as string)
+            )
+        ) catch()
+    )
+
+    fn WhSpinLoad = (
+        try (
+            if doesFileExist WhSpin_IniFile do (
+                local v = getINISetting WhSpin_IniFile "Settings" "Angle"
+                if v != "" do WhSpin_Angle = v as float
+                for i = 1 to 4 do (
+                    v = getINISetting WhSpin_IniFile "Presets" ("P" + i as string)
+                    if v != "" do WhSpin_Presets[i] = v as float
+                )
+            )
+        ) catch()
+    )
+
+    rollout WhSpin_Rollout "¿ìËÙĞı×ª v2.2" width:250 height:280
+    (
+        spinner spnAngle "½Ç¶È:" range:[-3600, 3600, 90] type:#float fieldWidth:70 pos:[12, 12]
+        label lblUnit "¶È" pos:[95, 14]
+        button btnStart "Æô¶¯µã»÷Ğı×ª" pos:[120, 10] width:115 height:24
+
+        groupBox grpDir "·½Ïò£¨°´µ±Ç°ÊÓÍ¼Öá£©" pos:[8, 42] width:234 height:58
+        button btnLeft  "×ó" pos:[16, 62] width:52 height:28
+        button btnRight "ÓÒ" pos:[74, 62] width:52 height:28
+        button btnUp    "ÉÏ" pos:[132, 62] width:52 height:28
+        button btnDown  "ÏÂ" pos:[190, 62] width:44 height:28
+
+        groupBox grpPre "Ô¤Éè£¨×ó¼üÊ¹ÓÃ£¬ÓÒ¼üÉèÎªµ±Ç°½Ç¶È£©" pos:[8, 108] width:234 height:58
+        button btnP1 "90" pos:[16, 128] width:52 height:28
+        button btnP2 "45" pos:[74, 128] width:52 height:28
+        button btnP3 "15" pos:[132, 128] width:52 height:28
+        button btnP4 "5"  pos:[190, 128] width:44 height:28
+
+        groupBox grpHelp "ËµÃ÷" pos:[8, 174] width:234 height:92
+        label lb1 "1. Ç°ÊÓÍ¼µÈÕı½»ÊÓÍ¼Ê¹ÓÃ" pos:[16, 194]
+        label lb2 "2. µã×óÓÒ¡úÈÆÆÁÄ»ÉÏÊúÖá×ª" pos:[16, 212]
+        label lb3 "3. µãÉÏÏÂ¡úÈÆÆÁÄ»ÉÏºáÖá×ª" pos:[16, 230]
+        label lb4 "4. ÖĞĞÄ=ÎïÌåPivot£»ÓÒ¼ü/EscÍË³ö" pos:[16, 248]
+
+        fn refreshPresetText = (
+            btnP1.text = WhSpin_Presets[1] as string
+            btnP2.text = WhSpin_Presets[2] as string
+            btnP3.text = WhSpin_Presets[3] as string
+            btnP4.text = WhSpin_Presets[4] as string
+        )
+
+        on WhSpin_Rollout open do (
+            WhSpinLoad()
+            spnAngle.value = WhSpin_Angle
+            refreshPresetText()
+        )
+        on WhSpin_Rollout close do (
+            WhSpinStopFeedback()
+            try (stopTool WhSpinTool) catch()
+            WhSpinSave()
+        )
+
+        on spnAngle changed val do (
+            WhSpin_Angle = val
+            WhSpinSave()
+        )
+
+        on btnStart pressed do WhSpinStartTool()
+
+        on btnLeft  pressed do WhSpinDo #left
+        on btnRight pressed do WhSpinDo #right
+        on btnUp    pressed do WhSpinDo #up
+        on btnDown  pressed do WhSpinDo #down
+
+        on btnP1 pressed do (WhSpin_Angle = WhSpin_Presets[1]; spnAngle.value = WhSpin_Angle)
+        on btnP2 pressed do (WhSpin_Angle = WhSpin_Presets[2]; spnAngle.value = WhSpin_Angle)
+        on btnP3 pressed do (WhSpin_Angle = WhSpin_Presets[3]; spnAngle.value = WhSpin_Angle)
+        on btnP4 pressed do (WhSpin_Angle = WhSpin_Presets[4]; spnAngle.value = WhSpin_Angle)
+
+        on btnP1 rightClick do (
+            if queryBox "°Ñµ±Ç°½Ç¶ÈÉèÎªÔ¤Éè1£¿" title:"ÉèÖÃÔ¤Éè" do (
+                WhSpin_Presets[1] = spnAngle.value; refreshPresetText(); WhSpinSave()
+            )
+        )
+        on btnP2 rightClick do (
+            if queryBox "°Ñµ±Ç°½Ç¶ÈÉèÎªÔ¤Éè2£¿" title:"ÉèÖÃÔ¤Éè" do (
+                WhSpin_Presets[2] = spnAngle.value; refreshPresetText(); WhSpinSave()
+            )
+        )
+        on btnP3 rightClick do (
+            if queryBox "°Ñµ±Ç°½Ç¶ÈÉèÎªÔ¤Éè3£¿" title:"ÉèÖÃÔ¤Éè" do (
+                WhSpin_Presets[3] = spnAngle.value; refreshPresetText(); WhSpinSave()
+            )
+        )
+        on btnP4 rightClick do (
+            if queryBox "°Ñµ±Ç°½Ç¶ÈÉèÎªÔ¤Éè4£¿" title:"ÉèÖÃÔ¤Éè" do (
+                WhSpin_Presets[4] = spnAngle.value; refreshPresetText(); WhSpinSave()
+            )
+        )
+    )
+
+    createDialog WhSpin_Rollout style:#(#style_titlebar, #style_sysmenu, #style_toolwindow)
 )

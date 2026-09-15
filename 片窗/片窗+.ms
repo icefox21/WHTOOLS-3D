@@ -15,7 +15,8 @@ fn pcPlusGetScriptPath = (
         undefined
     )
     if pcPlusScriptPath == undefined or pcPlusScriptPath == "" then (
-        pcPlusScriptPath = "H:\\新软件\\3D脚本\\片窗\\片窗+.ms"
+        local fallback = "H:\\新软件\\3D脚本\\片窗\\片窗+.ms"
+        if doesFileExist fallback do pcPlusScriptPath = fallback
     )
     pcPlusScriptPath
 )
@@ -619,16 +620,16 @@ rollout WH_GridEdit_Rollout "网格编辑器" width:300 height:340 (
                 local val = (args.X - 2.0) / (w - 4.0)
                 local minV = 0.02
                 local maxV = 0.98
-                if _gridEdit_selIdx > 1 do minV = _gridEdit_divX[_gridEdit_selIdx-1][1] + 0.01
-                if _gridEdit_selIdx < _gridEdit_divX.count do maxV = _gridEdit_divX[_gridEdit_selIdx+1][1] - 0.01
+                if _gridEdit_selIdx > 1 and _gridEdit_divX[_gridEdit_selIdx-1][2].count > 0 do minV = _gridEdit_divX[_gridEdit_selIdx-1][1] + 0.01
+                if _gridEdit_selIdx < _gridEdit_divX.count and _gridEdit_divX[_gridEdit_selIdx+1][2].count > 0 do maxV = _gridEdit_divX[_gridEdit_selIdx+1][1] - 0.01
                 _gridEdit_divX[_gridEdit_selIdx][1] = amin (amax val minV) maxV
                 refreshPreview()
             ) else if (_gridEdit_selType == "y" and _gridEdit_selIdx <= _gridEdit_divY.count) then (
                 local val = (args.Y - 2.0) / (h - 4.0)
                 local minV = 0.02
                 local maxV = 0.98
-                if _gridEdit_selIdx > 1 do minV = _gridEdit_divY[_gridEdit_selIdx-1][1] + 0.01
-                if _gridEdit_selIdx < _gridEdit_divY.count do maxV = _gridEdit_divY[_gridEdit_selIdx+1][1] - 0.01
+                if _gridEdit_selIdx > 1 and _gridEdit_divY[_gridEdit_selIdx-1][2].count > 0 do minV = _gridEdit_divY[_gridEdit_selIdx-1][1] + 0.01
+                if _gridEdit_selIdx < _gridEdit_divY.count and _gridEdit_divY[_gridEdit_selIdx+1][2].count > 0 do maxV = _gridEdit_divY[_gridEdit_selIdx+1][1] - 0.01
                 _gridEdit_divY[_gridEdit_selIdx][1] = amin (amax val minV) maxV
                 refreshPreview()
             )
@@ -681,7 +682,7 @@ rollout WH_GridEdit_Rollout "网格编辑器" width:300 height:340 (
     on WH_GridEdit_Rollout open do ( pvCanvas.BackColor = (dotNetClass "System.Drawing.Color").FromArgb 40 40 45; refreshPreview() )
 )
 
-rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
+rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.9" width:430 height:510
 (
     -- Rollout Local Variables
     local presets = #()
@@ -953,6 +954,18 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
         _gridEdit_divYStr = serializeDivs _gridEdit_divY
     )
     
+    fn pcIsTrueJunkLine line = (
+        local t = trimLeft (trimRight line)
+        if t == "" do return false
+        local parts = filterString t " \\t"
+        -- 仅当一整行由多个 True 组成才视为损坏行；单独的 true 是合法返回值
+        if parts.count < 2 do return false
+        for p in parts do (
+            if (toLower p) != "true" do return false
+        )
+        true
+    )
+
     fn pchWriteEmbeddedData = (
         local path = pcPlusGetScriptPath()
         local lines = pchReadScriptLines()
@@ -962,13 +975,11 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
         for line in lines do (
             if matchPattern line pattern:"--PCHPLUS_DATA_BEGIN*" then (
                 inData = true
+            ) else if matchPattern line pattern:"--PCHPLUS_DATA_END*" then (
+                inData = false
             ) else (
-                if matchPattern line pattern:"--PCHPLUS_DATA_END*" then (
-                    inData = false
-                ) else (
-                    if not inData then (
-                        append newLines line
-                    )
+                if not inData do (
+                    if not (pcIsTrueJunkLine line) do append newLines line
                 )
             )
         )
@@ -1034,6 +1045,9 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
         )
         append newLines "--PCHPLUS_DATA_END"
         
+        try (
+            if doesFileExist path do copyFile path (path + ".savebak")
+        ) catch ()
         local f = createFile path
         if f != undefined do (
             for line in newLines do format "%\n" line to:f
@@ -1227,13 +1241,16 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
     )
 
     fn loadNetImage filePath = (
-        local img = undefined
+        local result = undefined
         try (
             local bytes = (dotNetClass "System.IO.File").ReadAllBytes filePath
             local ms = dotNetObject "System.IO.MemoryStream" bytes
-            img = (dotNetClass "System.Drawing.Image").FromStream ms
+            local img = (dotNetClass "System.Drawing.Image").FromStream ms
+            result = img.Clone()
+            img.Dispose()
+            ms.Dispose()
         ) catch ()
-        img
+        result
     )
 
     fn parseRatios str = (
@@ -1520,19 +1537,19 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
 
                             local polyVerts = #()
                             append polyVerts vertMap[bi][bj]
-                            if bj > 1 and rectW > 1 do (
+                            if rectW > 1 do (
                                 for xi = (bi + 1) to (bi + rectW - 1) do append polyVerts vertMap[xi][bj]
                             )
                             append polyVerts vertMap[bi + rectW][bj]
-                            if (bi + rectW) <= cols and rectH > 1 do (
+                            if rectH > 1 do (
                                 for yj = (bj + 1) to (bj + rectH - 1) do append polyVerts vertMap[bi + rectW][yj]
                             )
                             append polyVerts vertMap[bi + rectW][bj + rectH]
-                            if (bj + rectH) <= rows and rectW > 1 do (
+                            if rectW > 1 do (
                                 for xi = (bi + rectW - 1) to (bi + 1) by -1 do append polyVerts vertMap[xi][bj + rectH]
                             )
                             append polyVerts vertMap[bi][bj + rectH]
-                            if bi > 1 and rectH > 1 do (
+                            if rectH > 1 do (
                                 for yj = (bj + rectH - 1) to (bj + 1) by -1 do append polyVerts vertMap[bi][yj]
                             )
                             local ok = polyop.createPolygon targetObj polyVerts
@@ -2051,7 +2068,8 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
                             if (dot n t.normal) > 0.99 do (
                                 local me = polyop.getFaceCenter obj i
                                 local d = length (me - t.center)
-                                if d < 20.0 and d < minDist do (
+                                -- 前面的开洞会移动面心，阈值放宽；同时限制 Z 带，避免贴到别的楼层
+                                if d < 150.0 and me.z > (t.zMin - 50.0) and me.z < (t.zMax + 50.0) and d < minDist do (
                                     minDist = d
                                     curF = i
                                 )
@@ -2407,6 +2425,7 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
 
     fn makeWindow = (
         logDebug "=== makeWindow 开始 ==="
+        local oldTaskMode = try (getCommandPanelTaskMode()) catch (undefined)
         local objs = getCurrentSelection()
         logDebug ("选中对象数: " + objs.count as string)
         if objs.count == 0 do return()
@@ -2431,8 +2450,8 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
             disableSceneRedraw()
             suspendEditing()
             
-            undo "MakeWindow UltraFast" on (
-                local frameMat = applyOldPchFrameMaterial (getOrCreatePchMaterial "窗框" makeOldPchFrameMaterial)
+            -- 不在此处 undo：由调用方（applyPreset / btnMake）统一包一层，避免嵌套
+            local frameMat = applyOldPchFrameMaterial (getOrCreatePchMaterial "窗框" makeOldPchFrameMaterial)
                 local glMat = applyOldPchGlassMaterial (getOrCreatePchMaterial "玻璃" makeOldPchGlassMaterial)
                 
                 local outerFrameSize = spnOuterSize.value
@@ -2440,8 +2459,8 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
                 local frameThickness = spnFrameThick.value
                 local glassThickness = spnGlassThick.value
                 
-                local groupInset = outerFrameSize - (innerFrameSize / 2.0)
-                local polyInset = innerFrameSize / 2.0
+                local groupInset = amax 0.0 (outerFrameSize - (innerFrameSize / 2.0))
+                local polyInset = amax 0.0 (innerFrameSize / 2.0)
                 
                 for obj in validObjs do (
                     local numF = polyop.getNumFaces obj
@@ -2452,16 +2471,23 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
                     
                     if groupInset > 0 do (
                         polyop.bevelFaces obj glassFaces 0.0 -groupInset
-                        polyop.setFaceMatID obj glassFaces 2
                     )
-                    if groupInset == 0 do polyop.setFaceMatID obj glassFaces 2
+                    polyop.setFaceMatID obj glassFaces 2
                     
                     local preVerts = #{1..(polyop.getNumVerts obj)}
                     
                     if polyInset > 0 do (
+                        local newGlass = #{}
                         for f in glassFaces as array do (
-                            try(polyop.bevelFaces obj #{f} 0.0 -polyInset)catch()
+                            local tmpBevel = #{f}
+                            try (
+                                polyop.bevelFaces obj tmpBevel 0.0 -polyInset
+                                newGlass += tmpBevel
+                            ) catch (
+                                newGlass[f] = true
+                            )
                         )
+                        glassFaces = newGlass
                     )
                     
                     if not glassFaces.isEmpty do (
@@ -2494,7 +2520,6 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
                         )
                     )
                 )
-            )
             
             resumeEditing()
             clearSelection()
@@ -2629,13 +2654,12 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
             
             local mouseButtons = dotNetClass "System.Windows.Forms.MouseButtons"
             if ev.Button == mouseButtons.Left then (
-                undo "片窗+生成" on (
-                    local cp = if p.colPositions != undefined then p.colPositions else (ratiosToPositions p.cols)
-                    local rp = if p.rowPositions != undefined then p.rowPositions else (ratiosToPositions p.rows)
-                    local cs = if p.colSegData != undefined then (parseSegData p.colSegData) else undefined
-                    local rs = if p.rowSegData != undefined then (parseSegData p.rowSegData) else undefined
-                    applyPreset cp rp colSegData:cs rowSegData:rs
-                )
+                -- applyPreset 自带 undo，这里不要再包一层（嵌套 undo 会打乱撤销栈）
+                local cp = if p.colPositions != undefined then p.colPositions else (ratiosToPositions p.cols)
+                local rp = if p.rowPositions != undefined then p.rowPositions else (ratiosToPositions p.rows)
+                local cs = if p.colSegData != undefined then (parseSegData p.colSegData) else undefined
+                local rs = if p.rowSegData != undefined then (parseSegData p.rowSegData) else undefined
+                applyPreset cp rp colSegData:cs rowSegData:rs
             ) else if ev.Button == mouseButtons.Right then (
                 contextMenuIndex = idx
                 popUpMenu presetContextMenu
@@ -2644,10 +2668,36 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
     )
     
     on btnSavePreset pressed do (
-        if presets.count >= 20 then (
-            messageBox "预设数量已达上限 (20个)！请先右键删除不需要的预设。" title:"提示"
+        -- Open the grid editor and append its result without a preset-count limit.
+        _gridEdit_divX = #()
+        _gridEdit_divY = #()
+        ::_gridEdit_result = undefined
+        ::_gridEdit_colPositions = undefined
+        ::_gridEdit_rowPositions = undefined
+        ::_gridEdit_colSegData = undefined
+        ::_gridEdit_rowSegData = undefined
+        createDialog WH_GridEdit_Rollout style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) modal:true
+        if ::_gridEdit_result != undefined then (
+            local colText = ::_gridEdit_result[1]
+            local rowText = ::_gridEdit_result[2]
+            local nextNum = (presets.count + 1) as string
+            local newPreset = structPreset name:nextNum cols:colText rows:rowText colPositions:(_gridEdit_colPositions) rowPositions:(_gridEdit_rowPositions) colSegData:(_gridEdit_colSegData) rowSegData:(_gridEdit_rowSegData)
+            append presets newPreset
+            saveAllPresetsToINI()
+            refreshListView()
+        )
+    )
+
+
+    on btnGridEdit pressed do (
+        -- 有选中预设则编辑该预设，否则当作新建
+        local selIdx = 0
+        try (
+            if lvPresets.SelectedItems.Count > 0 do selIdx = lvPresets.SelectedItems.Item[0].Index + 1
+        ) catch ()
+        if selIdx > 0 then (
+            editPreset selIdx
         ) else (
-            -- 打开可视化编辑器来新增预设
             _gridEdit_divX = #()
             _gridEdit_divY = #()
             ::_gridEdit_result = undefined
@@ -2668,46 +2718,12 @@ rollout UI_WinMakerToolPlus "PianChuang+ Window Maker V8.8" width:430 height:510
         )
     )
 
-    on btnGridEdit pressed do (
-        _gridEdit_divX = #()
-        _gridEdit_divY = #()
-        ::_gridEdit_result = undefined
-        ::_gridEdit_colPositions = undefined
-        ::_gridEdit_rowPositions = undefined
-        ::_gridEdit_colSegData = undefined
-        ::_gridEdit_rowSegData = undefined
-        createDialog WH_GridEdit_Rollout style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) modal:true
-        if ::_gridEdit_result != undefined then (
-            local colText = ::_gridEdit_result[1]
-            local rowText = ::_gridEdit_result[2]
-            if presets.count >= 20 then (
-                messageBox "预设数量已达上限 (20个)！请先右键删除不需要的预设。" title:"提示"
-            ) else (
-                local nextNum = (presets.count + 1) as string
-                local newPreset = structPreset name:nextNum cols:colText rows:rowText colPositions:(_gridEdit_colPositions) rowPositions:(_gridEdit_rowPositions) colSegData:(_gridEdit_colSegData) rowSegData:(_gridEdit_rowSegData)
-                append presets newPreset
-                saveAllPresetsToINI()
-                refreshListView()
-            )
+
+    on btnMake pressed do (
+        undo "MakeWindow" on (
+            makeWindow()
         )
     )
-    
-    on btnMake pressed do (
-        makeWindow()
-    )
-
-    on chkHeightEnable changed state do (
-        updateHeightEnableState()
-        saveAllPresetsToINI()
-    )
-    
-    on spnOuterSize changed val do ( saveAllPresetsToINI() )
-    on spnInnerSize changed val do ( saveAllPresetsToINI() )
-    on spnFrameThick changed val do ( saveAllPresetsToINI() )
-    on spnGlassThick changed val do ( saveAllPresetsToINI() )
-    on spnSill changed val do ( saveAllPresetsToINI() )
-    on spnDepth changed val do ( saveAllPresetsToINI() )
-    on spnWinHeight changed val do ( saveAllPresetsToINI() )
 )
 
 try(destroyDialog UI_WinMakerToolPlus)catch()
@@ -2715,7 +2731,7 @@ try(closeRolloutFloater PC_Floater)catch()
 createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_sysmenu, #style_toolwindow, #style_resizing)
 --PCHPLUS_DATA_BEGIN
 --Settings|OuterSize=75.0|InnerSize=50.0|FrameDepth=80.0|GlassDepth=8.0|HeightEnable=true|SillSize=1200.0|DepthSize=250.0|WinHeightSize=1600.0|WindowWidth=430|WindowHeight=510
---PresetCount|20
+--PresetCount|23
 --Preset|1|1|27,48,24|35,64|0.0,0.271739,0.757246,1.0|0.0,0.355932,1.0|0.271739:2,1;0.757246:2,1|0.355932:1,3
 --Preset|2|2|26,45,28|72,27|0.0,0.264493,0.717391,1.0|0.0,0.720339,1.0|0.264493:2,1;0.717391:2,1|0.720339:1,2,3
 --Preset|3|3|30,69|68,31|0.0,0.304348,1.0|0.0,0.686441,1.0|0.304348:2,1|0.686441:1
@@ -2727,8 +2743,8 @@ createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_
 --Preset|9|9|100|38,61|0.0,1.0|0.0,0.389831,1.0|-|0.389831:1
 --Preset|10|10|49,50|100|0.0,0.496377,1.0|0.0,1.0|0.496377:1|-
 --Preset|11|11|23,53,22|30,69|0.0,0.235507,0.771739,1.0|0.0,0.309322,1.0|0.235507:2,1;0.771739:2,1|0.309322:1,3
---Preset|12|12|50,49|77,22|0.0,0.503623,1.0|0.0,0.771186,1.0|0.503623:1|0.771186:1,2
---Preset|13|13|23,24,26,25|27,50,22|0.0,0.235507,0.481884,0.75,1.0|0.0,0.271186,0.779661,1.0|0.235507:2;0.481884:3,2,1;0.75:2|0.779661:1,2,3,4;0.271186:1,2,3,4
+--Preset|12|12|50,49|69,30|0.0,0.503623,1.0|0.0,0.699153,1.0|0.503623:1|0.699153:1,2
+--Preset|13|13|20,28,30,19|27,50,22|0.0,0.202899,0.492754,0.800725,1.0|0.0,0.271186,0.779661,1.0|0.202899:2;0.492754:3,2,1;0.800725:2|0.779661:1,2,3,4;0.271186:1,2,3,4
 --Preset|14|14|50,50|28,47,24|0.0,0.5,1.0|0.0,0.283898,0.758475,1.0|0.5:3,2,1|0.758475:1,2;0.283898:1,2
 --Preset|15|15|14,15,17,18,16,17|28,46,24|0.0,0.148551,0.300725,0.478261,0.663043,0.82971,1.0|0.0,0.288136,0.754237,1.0|0.148551:2;0.300725:3,2,1;0.478261:2;0.663043:3,2,1;0.82971:2|0.754237:1,2,3,4,5,6;0.288136:1,2,3,4,5,6
 --Preset|16|16|48,51|27,47,25|0.0,0.485507,1.0|0.0,0.271186,0.745763,1.0|0.485507:2|0.745763:1,2;0.271186:1,2
@@ -2736,4 +2752,7 @@ createDialog UI_WinMakerToolPlus style:#(#style_titlebar, #style_border, #style_
 --Preset|18|18|100|73,26|0.0,1.0|0.0,0.733051,1.0|-|0.733051:1
 --Preset|19|19|100|100|0.0,1.0|0.0,1.0|-|-
 --Preset|20|20|11,25,12,12,27,11|27,72|0.0,0.115942,0.369565,0.492754,0.615942,0.887681,1.0|0.0,0.275424,1.0|0.115942:2,1;0.369565:2,1;0.492754:2,1;0.615942:2,1;0.887681:2,1|0.275424:1,3,4,6
+--Preset|21|21|24,26,24,24|71,28|0.0,0.242754,0.507246,0.753623,1.0|0.0,0.716102,1.0|0.242754:1;0.507246:2;0.753623:1|0.716102:1,2,3,4
+--Preset|22|22|15,15,18,17,15,15|75,24|0.0,0.15942,0.315217,0.503623,0.681159,0.84058,1.0|0.0,0.754237,1.0|0.15942:1;0.315217:2,1;0.503623:1;0.681159:2,1;0.84058:1|0.754237:1,2,3,4,5,6
+--Preset|23|23|13,13,10,14,13,11,11,12|70,29|0.0,0.130435,0.26087,0.369565,0.518116,0.648551,0.764493,0.876812,1.0|0.0,0.70339,1.0|0.130435:1;0.26087:2;0.369565:1;0.518116:2,1;0.648551:1;0.764493:2;0.876812:1|0.70339:1,2,3,4,5,6,7,8
 --PCHPLUS_DATA_END
