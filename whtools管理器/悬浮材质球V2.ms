@@ -52,7 +52,7 @@ if WH_XFMat_V2_UIControls == undefined do WH_XFMat_V2_UIControls = #()
 -- ===== 调试日志系统 =====
 fn WH_XFMat_LogDebug msg = (
     try (
-        local logPath = "h:\\新软件\\3D脚本\\wh_xfmat_run_log.txt"
+        local logPath = (getDir #temp) + "wh_xfmat_run_log.txt"
         local f = openFile logPath mode:"a"
         if f == undefined do f = createFile logPath
         if f != undefined do (

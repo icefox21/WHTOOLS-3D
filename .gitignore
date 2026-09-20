@@ -16,3 +16,9 @@
 # Windows系统文件
 Thumbs.db
 Desktop.ini
+
+# 临时测试与排查脚本
+_*.py
+inspect_*.py
+test_*.ms
+maxscript_validate_*.ms
